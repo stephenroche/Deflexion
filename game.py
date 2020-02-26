@@ -17,9 +17,12 @@ class BoardState(dict):
     # 	self[position] = piece
 
     def set_start_state(self):
+    	self.clear()
+    	# dict.clear()
+
     	# Check these positions
-    	self[(4, 0)] = Pharaoh(0)
-    	self[(5, 7)] = Pharaoh(1)
+    	for team, position in [(0, (4, 0)), (1, (5, 7))]:
+    		self[position] = Pharaoh(team)
 
     	for team, position in [(0, (3, 0)), (0, (5, 0)), (1, (4, 7)), (1, (6, 7))]:
     		self[position] = Obelisk(team)
@@ -54,7 +57,7 @@ class BoardState(dict):
     	pass
 
 class Piece:
-	def __init__(self, team, aspect='NE'):
+	def __init__(self, team, aspect=None):
 		self.team = team
 		self.aspect = aspect
 
