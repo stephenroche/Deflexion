@@ -1,4 +1,7 @@
 import util
+import colorama
+colorama.init()
+from termcolor import colored
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -11,50 +14,54 @@ class BoardState(dict):
 		self.height = 8
 
 	def __getitem__(self, key):
-        return self.setdefault(key, None)
+		return self.setdefault(key, None)
 
-    # def add_piece(self, piece, position):
-    # 	self[position] = piece
+	# def add_piece(self, piece, position):
+	# 	self[position] = piece
 
-    def set_start_state(self):
-    	self.clear()
-    	# dict.clear()
+	def set_start_state(self):
+		self.clear()
+		# dict.clear()
 
-    	# Check these positions
-    	for team, position in [(0, (4, 0)), (1, (5, 7))]:
-    		self[position] = Pharaoh(team)
+		# Check these positions
+		for team, position in [(0, (4, 0)), (1, (5, 7))]:
+			self[position] = Pharaoh(team)
 
-    	for team, position in [(0, (3, 0)), (0, (5, 0)), (1, (4, 7)), (1, (6, 7))]:
-    		self[position] = Obelisk(team)
+		for team, position in [(0, (3, 0)), (0, (5, 0)), (1, (4, 7)), (1, (6, 7))]:
+			self[position] = Obelisk(team)
 
-    	for team, position, aspect in []:
-    		self[position] = Pyramid(team, aspect)
+		for team, position, aspect in [(0, (2, 0), 'NW'), (0, (2, 3), 'NW'), (0, (2, 4), 'SW'), (0, (3, 5), 'NW'), (0, (7, 1), 'NE'), (0, (9, 3), 'SW'), (0, (9, 4), 'NW'), (0, (7, 7), 'SE'), (0, (7, 4), 'SE'), (0, (7, 3), 'NE'), (0, (6, 2), 'SE'), (0, (2, 6), 'SW'), (0, (0, 4), 'NE'), (0, (0, 3), 'SE')]:
+			self[position] = Pyramid(team, aspect)
 
-    	for team, position, aspect in [(0, (4, 3), 'NW'), (0, (5, 3), 'NE'), (1, (4, 4), 'NE'), (1, (5, 4), 'NW')]:
-    		self[position] = Djed(team, aspect)
+		for team, position, aspect in [(0, (4, 3), 'NW'), (0, (5, 3), 'NE'), (1, (4, 4), 'NE'), (1, (5, 4), 'NW')]:
+			self[position] = Djed(team, aspect)
 
-   	def is_win_state(self):
-   		pharaohs_found = [False, False]
+	def is_win_state(self):
+		pharaohs_found = [False, False]
 
-   		for piece in self.values():
-   			if isinstance(piece, Pharaoh):
-   				pharaohs_found[piece.team] = True
+		for piece in self.values():
+			if isinstance(piece, Pharaoh):
+				pharaohs_found[piece.team] = True
 
-   		if pharaohs_found[0] and pharaohs_found[1]:
-   			return False
-   			
-   		elif pharaohs_found[0]:
-   			return 'Win_0'
-   			
-   		elif pharaohs_found[1]:
-   			return 'Win_1'
+			if pharaohs_found[0] and pharaohs_found[1]:
+				return False
 
-   		else:
-   			return 'Error: no pharaohs'
+			elif pharaohs_found[0]:
+				return 'Win_0'
+
+			elif pharaohs_found[1]:
+				return 'Win_1'
+
+			else:
+				return 'Error: no pharaohs'
 
 
-    def get_successor_states(self):
-    	pass
+	def get_successor_states(self):
+		pass
+
+	def __str__(self):
+		pass
+
 
 class Piece:
 	def __init__(self, team, aspect=None):
@@ -62,6 +69,9 @@ class Piece:
 		self.aspect = aspect
 
 	def get_actions(self):
+		return util.raiseNotDefined()
+
+	def icon(self):
 		return util.raiseNotDefined()
 
 	# Maybe remove and put in BoardState
@@ -83,7 +93,7 @@ class Piece:
 			else:
 				x_step = 0
 
-		elif action[0] == 't'
+		elif action[0] == 't':
 			x_step = y_step = 0
 
 			if action[1] == L:
@@ -108,6 +118,7 @@ class Obelisk(Piece):
 
 class Pyramid(Piece):
 	"""docstring for Pyramid"""
+
 	def get_actions(self):
 		return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tL', 'tR']
 
@@ -120,3 +131,15 @@ class Djed(Piece):
 
 		elif self.aspect == 'NW':
 			return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tR']
+
+
+class colours:
+	GOLD = '\033[33m'
+	SILVER = '\033[37m'
+	RESET = '\033[39m'
+
+
+
+
+
+print(colored('hello', 'yellow'), colored('\u0420\u043e\u0441', 'white'))
