@@ -2,6 +2,7 @@ import util
 import colorama
 colorama.init()
 from termcolor import colored
+from copy import deepcopy
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -12,6 +13,7 @@ class BoardState(dict):
 		# dict.__init__()
 		self.width = 10
 		self.height = 8
+		self.turn = 0
 
 	def __getitem__(self, key):
 		return self.setdefault(key, None)
@@ -30,6 +32,8 @@ class BoardState(dict):
 
 		for team, position, aspect in [(0, (4, 3), 'NW'), (0, (5, 3), 'NE'), (1, (4, 4), 'NE'), (1, (5, 4), 'NW')]:
 			self[position] = Djed(team, aspect)
+
+		self.turn = 0
 
 	def is_win_state(self):
 		pharaohs_found = [False, False]
@@ -50,29 +54,94 @@ class BoardState(dict):
 		else:
 			return 'Error: no pharaohs'
 
+	def get_valid_moves(self):
+		valid_moves = []
+		for piece_pos in self:
+			piece = self[piece_pos]
+			if piece.team != self.turn:
+				continue
+
+			for action in piece.get_actions():
+				next_x, next_y = piece_pos
+
+				if action[0] == 'm':
+					if 'N' in action:
+						next_y += 1
+					elif 'S' in action:
+						next_y -= 1
+
+					if 'E' in action:
+						next_x += 1
+					elif 'W' in action:
+						next_x -= 1
+
+					if (next_x, next_y) in self and not (isinstance(piece, Djed) and isinstance(self[next_x, next_y], (Pyramid, Obelisk))):
+						continue
+
+					if next_x < 0 or next_x	>= self.width or next_x == (self.width - 1) * piece.team:
+						continue
+
+					if next_y < 0 or next_y >= self.height:
+						continue
+
+				valid_moves.append( (piece_pos, action) )
+
+		return valid_moves
+
+	def make_move(self, move):
+		piece_pos, action = move
+		piece = self[piece_pos]
+		if action[0] == 't':
+			piece.turn(action[1])
+
+		elif action[0] == 'm':
+			next_x, next_y = piece_pos
+
+			if 'N' in action:
+				next_y += 1
+			elif 'S' in action:
+				next_y -= 1
+
+			if 'E' in action:
+				next_x += 1
+			elif 'W' in action:
+				next_x -= 1
+
+			swapped_piece = self[(next_x, next_y)] # Can be None
+			self[(next_x, next_y)] = piece
+			if swapped_piece:
+				self[piece_pos] = swapped_piece
+			else:
+				del self[piece_pos]
+
+		self.turn = 1 - self.turn
+
+	def get_successor_state(self, move):
+		next_board_state = deepcopy(self)
+		next_board_state.make_move(move)
+
+		return next_board_state
 
 	def get_successor_states(self):
 		pass
 
 	def __str__(self):
 		str_list = []
-		width = 10
-		height = 8
 
 		str_list.append('\u250C\u2500')
 		str_list.append(colored('\u2B07', 'red'))
-		for _ in range(width * 2 - 1):
+		for _ in range(self.width * 2 - 1):
 			str_list.append('\u2500')
 		str_list.append('\u2510\n')
 
-		for y in range(height - 1, -1, -1):
+		for y in range(self.height - 1, -1, -1):
 			str_list.append('\u2502 ')
-			for x in range(width):
+			for x in range(self.width):
 				if (x, y) in self:
 					str_list.append(self[(x, y)].icon())
 				elif x == 0:
 					str_list.append(colored(' ', 'red', 'on_white'))
-				elif x == width - 1:
+				elif x == self.width - 1:
 					str_list.append(colored(' ', 'red', 'on_yellow'))
 				else:
 					str_list.append(' ')
@@ -80,7 +149,7 @@ class BoardState(dict):
 			str_list.append('\u2502\n')
 
 		str_list.append('\u2514')
-		for _ in range(width * 2 - 1):
+		for _ in range(self.width * 2 - 1):
 			str_list.append('\u2500')
 		str_list.append(colored('\u2B06', 'red'))
 		str_list.append('\u2500\u2518\n')
@@ -100,6 +169,12 @@ class Piece:
 
 	def __str__(self):
 		return self.icon()
+
+	def turn(self, direction):
+		if direction == 'L':
+			self.aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
+		elif direction == 'R':
+			self.aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
 
 	# Maybe remove and put in BoardState
 	def move(self, action):
@@ -123,9 +198,9 @@ class Piece:
 		elif action[0] == 't':
 			x_step = y_step = 0
 
-			if action[1] == L:
+			if action[1] == 'L':
 				aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
-			elif action[1] == R:
+			elif action[1] == 'R':
 				aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
 
 		return ( (x_step, y_step), aspect)
@@ -181,17 +256,17 @@ class Djed(Piece):
 
 
 
-print(colored('\u25A3 \u25E9 \u25EA   \u25EA \u25EA \u25EA \u25EA\n\u2B14 \u2B15 \u29C4 \u29C5 \u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'), colored('\u25E9', 'white'))
+print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
 
 board = BoardState()
-print(board)
+# print(board)
 board.set_start_state()
 print(board)
-print(board.is_win_state())
-board[(1, 0)] = Pyramid(0, 'SW')
+board.make_move( ((5, 3), 'mSE') )
 print(board)
-board.set_start_state()
+board.make_move( ((5, 3), 'mNE') )
 print(board)
-del board[(4, 0)]
+new_board = board.get_successor_state( ((9, 3), 'tL') )
 print(board)
-print(board.is_win_state())
+print(new_board)
+# print(board.get_valid_moves())
