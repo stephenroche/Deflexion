@@ -7,11 +7,17 @@ class Agent():
 		util.raiseNotDefined()
 	
 
-class KeyBoardAgent(Agent):
+class KeyboardAgent(Agent):
 	"""docstring for KeyBoardAgent"""
-	def __init__(self, arg):
-		super(KeyBoardAgent, self).__init__()
-		self.arg = arg
+	def get_action(self, board_state):
+		x, y = input('Enter position: ').split()
+		position = (int(x), int(y))
+		action = input('Enter action: ')
+		move = (position, action)
+		laser = input('Choose laser: ')
+		laser = None if laser == '' else int(laser)
+
+		return (move, laser)
 		
 
 class RandomAgent(Agent):

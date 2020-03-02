@@ -332,21 +332,6 @@ class Djed(Piece):
 
 # print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
 
-# board = BoardState()
-# # print(board)
-# board.set_start_state()
-# print(board)
-# print(board.test_laser(1))
-# board.make_move( ((2, 3), 'tR'), check_valid=True)
-# print(board)
-# print(board.test_laser(1))
-# board.make_move( ((4, 4), 'tL'), check_valid=True)
-# print(board)
-# print(board.test_laser(1))
-# board.fire_laser(0)
-# board.fire_laser(1)
-# print(board)
-
 # board.set_start_state()
 # print(board)
 # successor_states = board.get_successor_states()
@@ -354,21 +339,28 @@ class Djed(Piece):
 # for s in successor_states:
 # 	print(s)
 
+
 board = BoardState()
 board.set_start_state()
 print(board)
-agent_0 = RandomAgent()
+agent_0 = RandomAgent() #KeyboardAgent()
 agent_1 = RandomAgent()
 
 while not board.is_win_state():
+	# if board.num_turns % 1000 == 0:
+	# 	print(board.num_turns)
+
 	agent = agent_0 if board.turn == 0 else agent_1
 	move, laser = agent.get_action(board)
-	board.make_move(move)
-	board.fire_laser(laser)
+	piece = board[move[0]]
+	board.make_move(move, check_valid=True)
+	if laser != None:
+		board.fire_laser(laser)
 	# print(move, laser)
 	# print(board)
 	# input()
 
-print(move, laser)
+print(piece, move, laser)
 print(board)
+print(board.is_win_state(), '!!!')
 print(board.num_turns, 'turns')
