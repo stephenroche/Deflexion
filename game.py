@@ -4,6 +4,7 @@ colorama.init()
 from termcolor import colored
 from copy import deepcopy
 import sys
+from agents import *
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -16,6 +17,7 @@ class BoardState(dict):
 		self.width = 10
 		self.height = 8
 		self.turn = 0
+		self.num_turns = 0
 
 	def __getitem__(self, key):
 		return self.setdefault(key, None)
@@ -36,6 +38,7 @@ class BoardState(dict):
 			self[position] = Djed(team, aspect)
 
 		self.turn = 0
+		self.num_turns = 0
 
 	def is_win_state(self):
 		pharaohs_found = [False, False]
@@ -122,6 +125,7 @@ class BoardState(dict):
 				del self[piece_pos]
 
 		self.turn = 1 - self.turn
+		self.num_turns += 1
 
 	def get_successor_state(self, move):
 		next_board_state = deepcopy(self)
@@ -232,10 +236,10 @@ class Piece:
 		self.aspect = aspect
 
 	def get_actions(self):
-		return util.raiseNotDefined()
+		util.raiseNotDefined()
 
 	def icon(self):
-		return util.raiseNotDefined()
+		util.raiseNotDefined()
 
 	def __str__(self):
 		return self.icon()
@@ -326,22 +330,22 @@ class Djed(Piece):
 
 
 
-print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
+# print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
 
-board = BoardState()
+# board = BoardState()
+# # print(board)
+# board.set_start_state()
 # print(board)
-board.set_start_state()
-print(board)
-print(board.test_laser(1))
-board.make_move( ((2, 3), 'tR'), check_valid=True)
-print(board)
-print(board.test_laser(1))
-board.make_move( ((4, 4), 'tL'), check_valid=True)
-print(board)
-print(board.test_laser(1))
-board.fire_laser(0)
-board.fire_laser(1)
-print(board)
+# print(board.test_laser(1))
+# board.make_move( ((2, 3), 'tR'), check_valid=True)
+# print(board)
+# print(board.test_laser(1))
+# board.make_move( ((4, 4), 'tL'), check_valid=True)
+# print(board)
+# print(board.test_laser(1))
+# board.fire_laser(0)
+# board.fire_laser(1)
+# print(board)
 
 # board.set_start_state()
 # print(board)
@@ -349,3 +353,22 @@ print(board)
 # print(len(successor_states))
 # for s in successor_states:
 # 	print(s)
+
+board = BoardState()
+board.set_start_state()
+print(board)
+agent_0 = RandomAgent()
+agent_1 = RandomAgent()
+
+while not board.is_win_state():
+	agent = agent_0 if board.turn == 0 else agent_1
+	move, laser = agent.get_action(board)
+	board.make_move(move)
+	board.fire_laser(laser)
+	# print(move, laser)
+	# print(board)
+	# input()
+
+print(move, laser)
+print(board)
+print(board.num_turns, 'turns')
