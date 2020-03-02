@@ -3,10 +3,12 @@ import colorama
 colorama.init()
 from termcolor import colored
 from copy import deepcopy
+import sys
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 laser_directions = ['N', 'E', 'S', 'W']
+opposite = {'N': 'S', 'E': 'W', 'S': 'N', 'W': 'E'}
 
 class BoardState(dict):
 	def __init__(self):
@@ -88,7 +90,12 @@ class BoardState(dict):
 
 		return valid_moves
 
-	def make_move(self, move):
+	def make_move(self, move, check_valid=False):
+		if check_valid and move not in self.get_valid_moves():
+			print('Board before invalid move:')
+			print(self)
+			exit('Invalid move: ' + str(move))
+
 		piece_pos, action = move
 		piece = self[piece_pos]
 		if action[0] == 't':
@@ -122,8 +129,9 @@ class BoardState(dict):
 
 		return next_board_state
 
+	# Maybe not use
 	def get_successor_states(self):
-		pass
+		return [self.get_successor_state(move) for move in self.get_valid_moves()]
 
 	def __str__(self):
 		str_list = []
@@ -156,6 +164,68 @@ class BoardState(dict):
 
 		return ''.join(str_list)
 
+	def test_laser(self, laser):
+		if laser == 0:
+			x, y = 9, 0
+			direction = 'N'
+		elif laser == 1:
+			x, y = 0, 7
+			direction = 'S'
+
+		while True:
+			if not (0 <= x < self.width and 0 <= y < self.height):
+				return None
+
+			elif (x, y) not in self:
+				if direction == 'N':
+					y += 1
+				elif direction == 'S':
+					y -= 1
+				elif direction == 'E':
+					x += 1
+				elif direction == 'W':
+					x -= 1
+				continue
+
+			piece = self[(x, y)]
+
+			if isinstance(piece, (Pharaoh, Obelisk)):
+				return (x, y)
+
+			elif isinstance(piece, Pyramid):
+				if direction in piece.aspect:
+					return (x, y)
+				else:
+					direction = piece.aspect.replace(opposite[direction], '')
+					if direction == 'N':
+						y += 1
+					elif direction == 'S':
+						y -= 1
+					elif direction == 'E':
+						x += 1
+					elif direction == 'W':
+						x -= 1
+
+			elif isinstance(piece, Djed):
+				aspect = piece.aspect
+				if direction in aspect:
+					aspect = ''.join(opposite[d] for d in aspect)
+
+				direction = aspect.replace(opposite[direction], '')
+				if direction == 'N':
+					y += 1
+				elif direction == 'S':
+					y -= 1
+				elif direction == 'E':
+					x += 1
+				elif direction == 'W':
+					x -= 1
+
+	def fire_laser(self, laser):
+		hit_pos = self.test_laser(laser)
+		if hit_pos:
+			del self[hit_pos]
+
 class Piece:
 	def __init__(self, team, aspect=None):
 		self.team = team
@@ -176,34 +246,34 @@ class Piece:
 		elif direction == 'R':
 			self.aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
 
-	# Maybe remove and put in BoardState
-	def move(self, action):
-		if action[0] == 'm':
-			aspect = self.aspect
+	# # Maybe remove and put in BoardState
+	# def move(self, action):
+	# 	if action[0] == 'm':
+	# 		aspect = self.aspect
 
-			if 'N' in action:
-				y_step = 1
-			elif 'S' in action:
-				y_step = -1
-			else:
-				y_step = 0
+	# 		if 'N' in action:
+	# 			y_step = 1
+	# 		elif 'S' in action:
+	# 			y_step = -1
+	# 		else:
+	# 			y_step = 0
 
-			if 'E' in action:
-				x_step = 1
-			elif 'W' in action:
-				x_step = -1
-			else:
-				x_step = 0
+	# 		if 'E' in action:
+	# 			x_step = 1
+	# 		elif 'W' in action:
+	# 			x_step = -1
+	# 		else:
+	# 			x_step = 0
 
-		elif action[0] == 't':
-			x_step = y_step = 0
+	# 	elif action[0] == 't':
+	# 		x_step = y_step = 0
 
-			if action[1] == 'L':
-				aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
-			elif action[1] == 'R':
-				aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
+	# 		if action[1] == 'L':
+	# 			aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
+	# 		elif action[1] == 'R':
+	# 			aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
 
-		return ( (x_step, y_step), aspect)
+	# 	return ( (x_step, y_step), aspect)
 
 
 class Pharaoh(Piece):
@@ -262,11 +332,20 @@ board = BoardState()
 # print(board)
 board.set_start_state()
 print(board)
-board.make_move( ((5, 3), 'mSE') )
+print(board.test_laser(1))
+board.make_move( ((2, 3), 'tR'), check_valid=True)
 print(board)
-board.make_move( ((5, 3), 'mNE') )
+print(board.test_laser(1))
+board.make_move( ((4, 4), 'tL'), check_valid=True)
 print(board)
-new_board = board.get_successor_state( ((9, 3), 'tL') )
+print(board.test_laser(1))
+board.fire_laser(0)
+board.fire_laser(1)
 print(board)
-print(new_board)
-# print(board.get_valid_moves())
+
+# board.set_start_state()
+# print(board)
+# successor_states = board.get_successor_states()
+# print(len(successor_states))
+# for s in successor_states:
+# 	print(s)
