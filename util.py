@@ -366,6 +366,15 @@ class Counter(dict):
             addend[key] = -1 * y[key]
         return addend
 
+    def __str__(self):
+        str_list = []
+        str_list.append('{\n')
+        for key, value in self.items():
+            str_list.append('%s: %.6f\n' % (key, value))
+        str_list.append('}')
+
+        return ''.join(str_list)
+
 
 def raiseNotDefined():
     fileName = inspect.stack()[1][1]

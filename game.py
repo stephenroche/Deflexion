@@ -80,7 +80,7 @@ class BoardState(dict):
 					elif 'W' in action:
 						next_x -= 1
 
-					if (next_x, next_y) in self and not (isinstance(piece, Djed) and isinstance(self[next_x, next_y], (Pyramid, Obelisk))):
+					if (next_x, next_y) in self and not (isinstance(piece, Djed) and isinstance(self[next_x, next_y], (Pyramid, Obelisk)) and (piece_pos[0] != (self.width - 1) * (1 - piece.team))):
 						continue
 
 					if next_x < 0 or next_x	>= self.width or next_x == (self.width - 1) * piece.team:
@@ -168,19 +168,20 @@ class BoardState(dict):
 
 		return ''.join(str_list)
 
-	def test_laser(self, laser):
-		if laser == 0:
-			x, y = 9, 0
-			direction = 'N'
-		elif laser == 1:
-			x, y = 0, 7
-			direction = 'S'
+	def get_path(self, start_pos, start_direction):
+		path = []
+
+		x, y = start_pos
+		direction = start_direction
 
 		while True:
 			if not (0 <= x < self.width and 0 <= y < self.height):
-				return None
+				path.append(None)
+				break
 
-			elif (x, y) not in self:
+			path.append( (x, y) )
+
+			if (x, y) not in self:
 				if direction == 'N':
 					y += 1
 				elif direction == 'S':
@@ -194,11 +195,11 @@ class BoardState(dict):
 			piece = self[(x, y)]
 
 			if isinstance(piece, (Pharaoh, Obelisk)):
-				return (x, y)
+				break
 
 			elif isinstance(piece, Pyramid):
 				if direction in piece.aspect:
-					return (x, y)
+					break
 				else:
 					direction = piece.aspect.replace(opposite[direction], '')
 					if direction == 'N':
@@ -224,9 +225,16 @@ class BoardState(dict):
 					x += 1
 				elif direction == 'W':
 					x -= 1
+		return path
+
+	def get_laser_path(self, laser):
+		if laser == 0:
+			return self.get_path((9, 0), 'N')
+		elif laser == 1:
+			return self.get_path((0, 7), 'S')
 
 	def fire_laser(self, laser):
-		hit_pos = self.test_laser(laser)
+		hit_pos = self.get_laser_path(laser)[-1]
 		if hit_pos:
 			del self[hit_pos]
 
@@ -282,6 +290,10 @@ class Piece:
 
 class Pharaoh(Piece):
 	"""docstring for Pharaoh"""
+	def __init__(self, team, aspect=None):
+		super().__init__(team, aspect)
+		self.type = 'Pharaoh'
+
 	def get_actions(self):
 		return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW']
 
@@ -292,6 +304,10 @@ class Pharaoh(Piece):
 
 class Obelisk(Piece):
 	"""docstring for Obelisk"""
+	def __init__(self, team, aspect=None):
+		super().__init__(team, aspect)
+		self.type = 'Obelisk'
+
 	def get_actions(self):
 		return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW']
 
@@ -302,6 +318,10 @@ class Obelisk(Piece):
 
 class Pyramid(Piece):
 	"""docstring for Pyramid"""
+	def __init__(self, team, aspect=None):
+		super().__init__(team, aspect)
+		self.type = 'Pyramid'
+
 	def get_actions(self):
 		return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tL', 'tR']
 
@@ -314,6 +334,10 @@ class Pyramid(Piece):
 
 class Djed(Piece):
 	"""docstring for Djed"""
+	def __init__(self, team, aspect=None):
+		super().__init__(team, aspect)
+		self.type = 'Djed'
+
 	def get_actions(self):
 		if self.aspect == 'NE':
 			return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tL']
@@ -345,10 +369,10 @@ board.set_start_state()
 extractor = TestExtractor()
 print(extractor.getFeatures(board))
 print(board)
-agent_0 = RandomAgent() #KeyboardAgent()
+agent_0 = RandomAgent()
 agent_1 = RandomAgent()
 
-while not board.is_win_state():
+while True:
 	# if board.num_turns % 1000 == 0:
 	# 	print(board.num_turns)
 
@@ -358,11 +382,17 @@ while not board.is_win_state():
 	board.make_move(move, check_valid=True)
 	if laser != None:
 		board.fire_laser(laser)
-	# print(move, laser)
-	# print(board)
+
+	if board.is_win_state():
+		break
+
+	print(extractor.getFeatures(board))
+	print(piece, move, laser)
+	print(board)
 	# input()
 
 print(piece, move, laser)
 print(board)
 print(board.is_win_state(), '!!!')
 print(board.num_turns, 'turns')
+

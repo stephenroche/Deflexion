@@ -22,37 +22,54 @@ class TestExtractor(FeatureExtractor):
     def pharaohs_first(item):
         piece_pos, piece = item
 
-        return 0 if isinstance(piece, Pharaoh) else 1
+        return 0 if piece.type == 'Pharaoh' else 1
 
     def getFeatures(self, board_state):
         feats = util.Counter()
         feats['Obelisks diff'] = 0
         feats['Pyramids diff'] = 0
-        feats['Djeds diff'] = 0
         feats['Pieces on gold minus silver'] = 0
         feats['Defensive pieces'] = 0
         feats['Offensive pieces'] = 0
+
+        # Piece based:
 
         pharaoh_positions = [None, None]
 
         for piece_pos, piece in sorted(board_state.items(), key=self.pharaohs_first):
             team_toggle = 1 if piece.team == 0 else -1
-            if isinstance(piece, Pharaoh):
+            if piece.type == 'Pharaoh':
                 pharaoh_positions[piece.team] = piece_pos
                 continue
 
-            if isinstance(piece, Obelisk):
+            if piece.type == 'Obelisk':
                 feats['Obelisks diff'] += 0.1 * team_toggle
-            elif isinstance(piece, Pyramid):
+            elif piece.type == 'Pyramid':
                 feats['Pyramids diff'] += 0.1 * team_toggle
-            elif isinstance(piece, Djed):
-                feats['Djeds diff'] += 0.1 * team_toggle
+            elif piece.type == 'Djed':
+                pass
+                # feats['Djeds diff'] += 0.1 * team_toggle
 
             if piece_pos[0] == 0 or piece_pos[0] == board_state.width - 1:
                 feats['Pieces on gold minus silver'] += 0.1 * team_toggle
 
             feats['Defensive pieces'] += 0.1 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
             feats['Offensive pieces'] += 0.1 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
+
+        # Path based:
+
+        feats['Laser control'] = 0
+        feats['Pieces threatened'] = 0
+        for laser in (0, 1):
+            piece_from_laser = 1
+            laser_path = board_state.get_laser_path(laser)
+            for position in laser_path:
+                if position in board_state:
+                    if position != laser_path[-1]:
+                        feats['Laser control'] += 0.1 * (1 if board_state[position].team == 0 else -1) / piece_from_laser
+                        piece_from_laser += 1
+                    else:
+                        feats['Pieces threatened'] += (1 if board_state[position].team == 0 else -1)
 
         return feats
 
