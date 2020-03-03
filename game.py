@@ -5,6 +5,7 @@ from termcolor import colored
 from copy import deepcopy
 import sys
 from agents import *
+from featureExtractors import *
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -61,8 +62,7 @@ class BoardState(dict):
 
 	def get_valid_moves(self):
 		valid_moves = []
-		for piece_pos in self:
-			piece = self[piece_pos]
+		for piece_pos, piece in self.items():
 			if piece.team != self.turn:
 				continue
 
@@ -342,6 +342,8 @@ class Djed(Piece):
 
 board = BoardState()
 board.set_start_state()
+extractor = TestExtractor()
+print(extractor.getFeatures(board))
 print(board)
 agent_0 = RandomAgent() #KeyboardAgent()
 agent_1 = RandomAgent()
