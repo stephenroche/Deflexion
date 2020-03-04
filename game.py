@@ -21,7 +21,7 @@ class BoardState(dict):
 		self.num_turns = 0
 
 	def __getitem__(self, key):
-		return self.setdefault(key, None)
+		return self.get(key, None)
 
 	def set_start_state(self):
 		self.clear()
@@ -366,7 +366,7 @@ class Djed(Piece):
 
 board = BoardState()
 board.set_start_state()
-extractor = TestExtractor()
+extractor = DeflexionExtractor()
 print(extractor.getFeatures(board))
 print(board)
 agent_0 = RandomAgent()
@@ -376,19 +376,24 @@ while True:
 	# if board.num_turns % 1000 == 0:
 	# 	print(board.num_turns)
 
+	feats = extractor.getFeatures(board)
+
 	agent = agent_0 if board.turn == 0 else agent_1
 	move, laser = agent.get_action(board)
 	piece = board[move[0]]
 	board.make_move(move, check_valid=True)
+
 	if laser != None:
 		board.fire_laser(laser)
 
 	if board.is_win_state():
+		print(feats)
 		break
 
-	print(extractor.getFeatures(board))
-	print(piece, move, laser)
-	print(board)
+	# print(extractor.getFeatures(board))
+	# print(piece, move, laser)
+	# print(board)
+
 	# input()
 
 print(piece, move, laser)
