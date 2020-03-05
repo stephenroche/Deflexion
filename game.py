@@ -58,7 +58,7 @@ class BoardState(dict):
 			return 'Win_1'
 
 		else:
-			return 'Error: no pharaohs'
+			sys.exit('Error: no pharaohs')
 
 	def get_valid_moves(self):
 		valid_moves = []
@@ -127,15 +127,20 @@ class BoardState(dict):
 		self.turn = 1 - self.turn
 		self.num_turns += 1
 
-	def get_successor_state(self, move):
+	def get_successor_state(self, move=None, laser=None):
 		next_board_state = deepcopy(self)
-		next_board_state.make_move(move)
+
+		if move != None:
+			next_board_state.make_move(move)
+
+		if laser != None:
+			next_board_state.fire_laser(laser)
 
 		return next_board_state
 
-	# Maybe not use
-	def get_successor_states(self):
-		return [self.get_successor_state(move) for move in self.get_valid_moves()]
+	# # Maybe not use
+	# def get_successor_states(self):
+	# 	return [self.get_successor_state(move) for move in self.get_valid_moves()]
 
 	def __str__(self):
 		str_list = []
@@ -257,35 +262,6 @@ class Piece:
 			self.aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
 		elif direction == 'R':
 			self.aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
-
-	# # Maybe remove and put in BoardState
-	# def move(self, action):
-	# 	if action[0] == 'm':
-	# 		aspect = self.aspect
-
-	# 		if 'N' in action:
-	# 			y_step = 1
-	# 		elif 'S' in action:
-	# 			y_step = -1
-	# 		else:
-	# 			y_step = 0
-
-	# 		if 'E' in action:
-	# 			x_step = 1
-	# 		elif 'W' in action:
-	# 			x_step = -1
-	# 		else:
-	# 			x_step = 0
-
-	# 	elif action[0] == 't':
-	# 		x_step = y_step = 0
-
-	# 		if action[1] == 'L':
-	# 			aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
-	# 		elif action[1] == 'R':
-	# 			aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
-
-	# 	return ( (x_step, y_step), aspect)
 
 
 class Pharaoh(Piece):

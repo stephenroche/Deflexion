@@ -2,7 +2,7 @@ import util
 # from game import *
 
 class FeatureExtractor:
-    def getFeatures(self, board_state):
+    def get_features(self, board_state):
         """
           Returns a dict from features to counts
           Usually, the count will just be 1.0 for
@@ -11,7 +11,7 @@ class FeatureExtractor:
         util.raiseNotDefined()
 
 class IdentityExtractor(FeatureExtractor):
-    def getFeatures(self, board_state):
+    def get_features(self, board_state):
         feats = util.Counter()
         feats[board_state] = 1.0
         return feats
@@ -24,7 +24,7 @@ class DeflexionExtractor(FeatureExtractor):
 
         return 0 if piece.type == 'Pharaoh' else 1
 
-    def getFeatures(self, board_state):
+    def get_features(self, board_state):
         feats = util.Counter()
         feats['Gold\'s turn'] = 1 if board_state.turn == 0 else -1
         feats['Obelisks diff'] = 0
@@ -108,7 +108,7 @@ class SimpleExtractor(FeatureExtractor):
     - whether a ghost is one step away
     """
 
-    def getFeatures(self, board_state, action):
+    def get_features(self, board_state, action):
         # extract the grid of food and wall locations and get the ghost locations
         food = board_state.getFood()
         walls = board_state.getWalls()
