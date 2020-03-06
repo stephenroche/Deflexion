@@ -251,10 +251,8 @@ class Counter(dict):
         Counter will result in an error.
         """
         total = float(self.totalCount())
-        if total == 0:
-            return
-        for key in list(self.keys()):
-            self[key] = self[key] / total
+        if total != 0:
+            self.divideAll(total)
 
     def divideAll(self, divisor):
         """
@@ -263,6 +261,14 @@ class Counter(dict):
         divisor = float(divisor)
         for key in self:
             self[key] /= divisor
+
+    def sample(self):
+        r = random.random() * self.totalCount()
+        base = 0
+        for key, prob in self.items():
+            base += prob
+            if r <= base:
+                return key
 
     def copy(self):
         """

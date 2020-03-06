@@ -2,6 +2,7 @@ import random
 import util
 from featureExtractors import *
 from copy import deepcopy
+from math import log10
 
 class Agent():
 	"""docstring for Agent"""
@@ -34,24 +35,25 @@ class RandomAgent(Agent):
 
 class LearningAgent(Agent):
 	"""docstring for LearningAgent"""
-	def __init__(self, feat_extractor=DeflexionExtractor(), discount=0.9, alpha=0.01):
-        self.weights = util.Counter()
-        self.feat_extractor = feat_extractor
-        self.discount = discount
-        self.alpha = alpha
+	def __init__(self, feat_extractor=DeflexionExtractor(), discount=1, alpha=0.01):
+		self.weights = util.Counter()
+		self.feat_extractor = feat_extractor
+		self.discount = discount
+		self.alpha = alpha
 
-    def get_value(self, board_state):
-    	result = board_state.is_win_state()
-    	if result == 'Win_0':
-    		return 1
-    	elif result == 'Win_1':
-    		return -1
-    	else:
-	        return self.weights * self.feat_extractor.get_features(board_state)
+	def get_value(self, board_state):
+		result = board_state.is_win_state()
+		if result == 'Win_0':
+			return 1
+		elif result == 'Win_1':
+			return -1
+		else:
+			return self.weights * self.feat_extractor.get_features(board_state)
 
-	def get_action(self, board_state, team=0, epsilon=0):
+	def get_action(self, board_state, team, epsilon=0, certainty=10):
 		team_toggle = 1 if team == 0 else -1
 		moves = board_state.get_valid_moves()
+		probs = util.Counter()
 
 		best_action = None
 		best_value = None
@@ -67,24 +69,37 @@ class LearningAgent(Agent):
 					continue
 
 				value = self.get_value(board_state_after_laser)
+				probs[(move, laser)] = 10**(team_toggle * certainty * value)
 
 				if not best_action or team_toggle * value > team_toggle * best_value:
 					best_action = (move, laser)
 					best_value = value
 
+		print('Best move was', best_action, 'with value', best_value)
+
+		action = probs.sample()
+		value = log10(probs[action]) / (team_toggle * certainty)
+
+		print('Move taken was', action, 'with value', value)
+
 		# Update weights
-		diff = (self.discount * best_value) - self.get_value(board_state)
+		diff = (self.discount * value) - self.get_value(board_state)
 		features = self.feat_extractor.get_features(board_state)
-        for key, activation in features.items():
-            self.weights[key] += self.alpha * diff * activation
+		for key, activation in features.items():
+			self.weights[key] += self.alpha * diff * activation * (2 if best_value in (1, -1) else 1)
 
-		if random.random() < epsilon:
-			move = random.choice(moves)
-			laser = random.choice( (None, 0, 1) )
-			return (move, laser)
+		# if random.random() < epsilon:
+		# 	move = random.choice(moves)
+		# 	laser = random.choice( (None, 0, 1) )
 
-		else:
-			return best_action
+		# 	print('Best move was', best_action, 'with value', best_value)
+
+		# 	return (move, laser)
+
+		# else:
+		# 	return best_action
+
+		return action
 		
 		
 

@@ -332,48 +332,50 @@ class Djed(Piece):
 
 # print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
 
-# board.set_start_state()
-# print(board)
-# successor_states = board.get_successor_states()
-# print(len(successor_states))
-# for s in successor_states:
-# 	print(s)
-
-
-board = BoardState()
-board.set_start_state()
 extractor = DeflexionExtractor()
-print(extractor.getFeatures(board))
-print(board)
-agent_0 = RandomAgent()
-agent_1 = RandomAgent()
-
+# agent_0 = RandomAgent()
+# agent_1 = RandomAgent()
+agent = LearningAgent()
+board = BoardState()
+num_games = 1
 while True:
-	# if board.num_turns % 1000 == 0:
-	# 	print(board.num_turns)
 
-	feats = extractor.getFeatures(board)
+	board.set_start_state()
 
-	agent = agent_0 if board.turn == 0 else agent_1
-	move, laser = agent.get_action(board)
-	piece = board[move[0]]
-	board.make_move(move, check_valid=True)
+	while True:
+		print('-----------------')
+		features = extractor.get_features(board)
+		print('Features:', features)
+		print('Weights:', agent.weights)
+		print('Value:', agent.weights * features)
+		print(board)
 
-	if laser != None:
-		board.fire_laser(laser)
+		# agent = agent_0 if board.turn == 0 else agent_1
+		move, laser = agent.get_action(board, board.turn, certainty=5)
+		piece = board[move[0]]
+		print(piece, move, laser)
+		board.make_move(move)
 
-	if board.is_win_state():
-		print(feats)
-		break
+		if laser != None:
+			board.fire_laser(laser)
 
-	# print(extractor.getFeatures(board))
+		if board.is_win_state():
+			# print(feats)
+			break
+
+		# print(extractor.getFeatures(board))
+		# print(piece, move, laser)
+		# print(board)
+
+		# input()
+
 	# print(piece, move, laser)
-	# print(board)
+	print(board)
+	print(board.is_win_state(), '!!!')
+	print(board.num_turns, 'turns')
+	print('Game', num_games)
+	num_games += 1
+	print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-	# input()
-
-print(piece, move, laser)
-print(board)
-print(board.is_win_state(), '!!!')
-print(board.num_turns, 'turns')
+	input()
 
