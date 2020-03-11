@@ -75,18 +75,17 @@ class LearningAgent(Agent):
 					best_action = (move, laser)
 					best_value = value
 
-		print('Best move was', best_action, 'with value', best_value)
-
 		action = probs.sample()
 		value = log10(probs[action]) / (team_toggle * certainty)
 
+		print('Best move was', best_action, 'with value', best_value)
 		print('Move taken was', action, 'with value', value)
 
 		# Update weights
 		diff = (self.discount * value) - self.get_value(board_state)
 		features = self.feat_extractor.get_features(board_state)
 		for key, activation in features.items():
-			self.weights[key] += self.alpha * diff * activation * (2 if best_value in (1, -1) else 1)
+			self.weights[key] += self.alpha * diff * activation * (10 if best_value == 1 else 1)
 
 		# if random.random() < epsilon:
 		# 	move = random.choice(moves)

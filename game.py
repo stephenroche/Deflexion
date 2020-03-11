@@ -6,6 +6,7 @@ from copy import deepcopy
 import sys
 from agents import *
 from featureExtractors import *
+import cProfile
 
 aspects = ['NE', 'SE', 'SW', 'NW']
 move_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
@@ -332,50 +333,100 @@ class Djed(Piece):
 
 # print(colored('\u265A \u26CB \U0001F796 \u25A9 \u2B1B', 'yellow'))
 
-extractor = DeflexionExtractor()
-# agent_0 = RandomAgent()
-# agent_1 = RandomAgent()
-agent = LearningAgent()
-board = BoardState()
-num_games = 1
-while True:
+# extractor = DeflexionExtractor()
+# # agent_0 = RandomAgent()
+# # agent_1 = RandomAgent()
+# agent = LearningAgent()
+# board = BoardState()
+# num_games = 1
+# while True:
 
-	board.set_start_state()
+# 	board.set_start_state()
 
-	while True:
-		print('-----------------')
-		features = extractor.get_features(board)
-		print('Features:', features)
-		print('Weights:', agent.weights)
-		print('Value:', agent.weights * features)
-		print(board)
+# 	while True:
+# 		print('-----------------')
+# 		features = extractor.get_features(board)
+# 		print('Features:', features)
+# 		print('Weights:', agent.weights)
+# 		print('Value:', agent.weights * features)
+# 		print(board)
 
-		# agent = agent_0 if board.turn == 0 else agent_1
-		move, laser = agent.get_action(board, board.turn, certainty=5)
-		piece = board[move[0]]
-		print(piece, move, laser)
-		board.make_move(move)
+# 		# agent = agent_0 if board.turn == 0 else agent_1
+# 		move, laser = agent.get_action(board, board.turn, certainty=5)
+# 		piece = board[move[0]]
+# 		print(piece, move, laser)
+# 		board.make_move(move)
 
-		if laser != None:
-			board.fire_laser(laser)
+# 		if laser != None:
+# 			board.fire_laser(laser)
 
-		if board.is_win_state():
-			# print(feats)
-			break
+# 		if board.is_win_state():
+# 			# print(feats)
+# 			break
 
-		# print(extractor.getFeatures(board))
+# 		# print(extractor.getFeatures(board))
+# 		# print(piece, move, laser)
+# 		# print(board)
+
+# 		# input()
+
+# 	# print(piece, move, laser)
+# 	print(board)
+# 	print(board.is_win_state(), '!!!')
+# 	print(board.num_turns, 'turns')
+# 	print('Game', num_games)
+# 	num_games += 1
+# 	print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
+# 	input()
+
+def run_games():
+	extractor = DeflexionExtractor()
+	# agent_0 = RandomAgent()
+	# agent_1 = RandomAgent()
+	agent = LearningAgent()
+	board = BoardState()
+	num_games = 1
+	for _ in range(1):
+
+		board.set_start_state()
+
+		while True:
+			print('-----------------')
+			features = extractor.get_features(board)
+			print('Features:', features)
+			print('Weights:', agent.weights)
+			print('Value:', agent.weights * features)
+			print(board)
+
+			# agent = agent_0 if board.turn == 0 else agent_1
+			move, laser = agent.get_action(board, board.turn, certainty=5)
+			piece = board[move[0]]
+			print(piece, move, laser)
+			board.make_move(move)
+
+			if laser != None:
+				board.fire_laser(laser)
+
+			if board.is_win_state():
+				# print(feats)
+				break
+
+			# print(extractor.getFeatures(board))
+			# print(piece, move, laser)
+			# print(board)
+
+			# input()
+
 		# print(piece, move, laser)
-		# print(board)
+		print(board)
+		print(board.is_win_state(), '!!!')
+		print(board.num_turns, 'turns')
+		print('Game', num_games)
+		num_games += 1
+		print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
 		# input()
 
-	# print(piece, move, laser)
-	print(board)
-	print(board.is_win_state(), '!!!')
-	print(board.num_turns, 'turns')
-	print('Game', num_games)
-	num_games += 1
-	print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-
-	input()
-
+# cProfile.run('run_games()')
+run_games()

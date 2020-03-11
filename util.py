@@ -190,9 +190,8 @@ class Counter(dict):
     also be normalized and their total count and arg max can be extracted.
     """
 
-    def __getitem__(self, idx):
-        self.setdefault(idx, 0)
-        return dict.__getitem__(self, idx)
+    def __getitem__(self, key):
+        return self.setdefault(key, 0)
 
     def incrementAll(self, keys, count):
         """
