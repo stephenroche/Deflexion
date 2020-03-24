@@ -2,7 +2,7 @@ import util
 import colorama
 colorama.init()
 from termcolor import colored
-from copy import deepcopy
+# from copy import deepcopy
 import sys
 from agents import *
 from featureExtractors import *
@@ -129,7 +129,10 @@ class BoardState(dict):
 		self.num_turns += 1
 
 	def get_successor_state(self, move=None, laser=None):
-		next_board_state = deepcopy(self)
+		# Copy board
+		next_board_state = BoardState()
+		for piece_pos, piece in self.items():
+			next_board_state[piece_pos] = piece.copy()
 
 		if move != None:
 			next_board_state.make_move(move)
@@ -263,6 +266,9 @@ class Piece:
 			self.aspect = aspects[(aspects.index(self.aspect) + 3) % 4]
 		elif direction == 'R':
 			self.aspect = aspects[(aspects.index(self.aspect) + 1) % 4]
+
+	def copy(self):
+		return self.__class__(self.team, self.aspect)
 
 
 class Pharaoh(Piece):
