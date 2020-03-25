@@ -31,6 +31,7 @@ import inspect
 import heapq
 import random
 import io
+from math import sqrt, inf
 
 
 """
@@ -544,3 +545,30 @@ def pause():
     """
     print("<Press enter/return to continue>")
     input()
+
+class MCST_Node:
+    def __init__(self, team_to_move, parent=None, action=None, board_state=None):
+        self.team_to_move = team_to_move
+        self.parent = parent
+        self.children = []
+        self.action = action
+        self.board_state = board_state
+        self.times_visited = 0
+        self.total_score = 0
+
+    def is_root(self):
+        return self.parents == None
+
+    def is_leaf(self):
+        return self.children == []
+
+    def make_children(self):
+        for move in self.board_state.get_valid_moves():
+            for laser in (None, 0, 1):
+                self.children.append(MCST_Node(1 - team_to_move, self, (move, laser)))
+
+    def UCB_value(self, exploration_constant=2):
+        if self.times_visited == 0:
+            return inf
+        else:
+            return self.total_score / self.times_visited + exploration_constant * sqrt(log(self.parent.times_visited) / self.times_visited)
