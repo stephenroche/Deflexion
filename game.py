@@ -128,11 +128,15 @@ class BoardState(dict):
 		self.turn = 1 - self.turn
 		self.num_turns += 1
 
-	def get_successor_state(self, move=None, laser=None):
-		# Copy board
-		next_board_state = BoardState()
+	def copy(self):
+		copied_board = BoardState()
 		for piece_pos, piece in self.items():
-			next_board_state[piece_pos] = piece.copy()
+			copied_board[piece_pos] = piece.copy()
+
+		return copied_board
+
+	def get_successor_state(self, move=None, laser=None):
+		next_board_state = self.copy()
 
 		if move != None:
 			next_board_state.make_move(move)
@@ -434,5 +438,11 @@ def run_games():
 
 		# input()
 
-# cProfile.run('run_games()')
-run_games()
+# cProfile.run('run_games()', sort='time')
+# run_games()
+cProfile.run('''
+board = BoardState()
+board.set_start_state()
+for _ in range(1000):
+	DeflexionExtractor().get_features(board)
+''', sort='time')
