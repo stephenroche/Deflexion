@@ -31,7 +31,7 @@ import inspect
 import heapq
 import random
 import io
-from math import sqrt, inf
+from math import sqrt, inf, log
 
 
 """
@@ -557,7 +557,7 @@ class MCST_Node:
         self.total_score = 0
 
     def is_root(self):
-        return self.parents == None
+        return self.parent == None
 
     def is_leaf(self):
         return self.children == []
@@ -565,10 +565,33 @@ class MCST_Node:
     def make_children(self):
         for move in self.board_state.get_valid_moves():
             for laser in (None, 0, 1):
-                self.children.append(MCST_Node(1 - team_to_move, self, (move, laser)))
+                self.children.append(MCST_Node(1 - self.team_to_move, self, (move, laser)))
 
-    def UCB_value(self, exploration_constant=2):
+        def order_actions(child):
+            piece_type = self.board_state[child.action[0][0]].type
+            if piece_type == 'Pharaoh':
+                return 0
+            elif piece_type == 'Djed':
+                return 1
+            elif piece_type == 'Pyramid':
+                return 2
+            else:
+                return 3
+
+        self.children.sort(key=order_actions)
+
+    def UCB(self, exploration_constant=2):
         if self.times_visited == 0:
             return inf
         else:
-            return self.total_score / self.times_visited + exploration_constant * sqrt(log(self.parent.times_visited) / self.times_visited)
+            team_toggle = 1 if self.team_to_move == 1 else -1
+            return team_toggle * self.total_score / self.times_visited + exploration_constant * sqrt(log(self.parent.times_visited) / self.times_visited)
+
+    def add_board_state(self):
+        move, laser = self.action
+        self.board_state = self.parent.board_state.get_successor_state(move)
+
+        if laser == None or self.board_state.fire_laser(laser) != None:
+            return True
+
+        return False

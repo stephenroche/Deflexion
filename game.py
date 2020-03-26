@@ -250,6 +250,7 @@ class BoardState(dict):
 		hit_pos = self.get_laser_path(laser)[-1]
 		if hit_pos:
 			del self[hit_pos]
+		return hit_pos
 
 class Piece:
 	def __init__(self, team, aspect=None):
@@ -394,10 +395,11 @@ def run_games():
 	extractor = DeflexionExtractor()
 	# agent_0 = RandomAgent()
 	# agent_1 = RandomAgent()
-	agent = LearningAgent()
+	# agent = LearningAgent()
+	agent = MCSTAgent()
 	board = BoardState()
 	num_games = 1
-	for _ in range(1):
+	for _ in range(100):
 
 		board.set_start_state()
 
@@ -436,13 +438,19 @@ def run_games():
 		num_games += 1
 		print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-		# input()
+		input()
 
 # cProfile.run('run_games()', sort='time')
-# run_games()
-cProfile.run('''
-board = BoardState()
-board.set_start_state()
-for _ in range(1000):
-	DeflexionExtractor().get_features(board)
-''', sort='time')
+run_games()
+
+# cProfile.run('''
+# board = BoardState()
+# board.set_start_state()
+# for _ in range(1000):
+# 	DeflexionExtractor().get_features(board)
+# ''', sort='time')
+
+# board = BoardState()
+# board.set_start_state()
+# agent = MCSTAgent()
+# print(agent.get_action(board, board.turn))

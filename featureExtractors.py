@@ -66,6 +66,7 @@ class DeflexionExtractor(FeatureExtractor):
         feats['Enemies neighbouring Djeds'] = self.attenuate(feats['Enemies neighbouring Djeds'])
         feats['Defensive pieces'] = self.attenuate(feats['Defensive pieces'])
         feats['Offensive pieces'] = self.attenuate(feats['Offensive pieces'])
+        feats['Pieces on gold minus silver'] = self.attenuate(feats['Pieces on gold minus silver'])
 
         # Path based:
 
@@ -79,7 +80,7 @@ class DeflexionExtractor(FeatureExtractor):
                         feats['Laser control'] += 0.2 * (1 if piece.team == 0 else -1) / (piece_from_laser + 1)
                         piece_from_laser += 1
                     else:
-                        feats['%ss threatened' % piece.type] += 0.2 * (1 if piece.team == 0 else -1)
+                        feats['%ss threatened' % piece.__class__.__name__] += 0.2 * (1 if piece.team == 0 else -1)
 
         # Paths from Pharaoh
         for team in (0, 1):
