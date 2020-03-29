@@ -563,12 +563,8 @@ class MCST_Node:
         return self.children == []
 
     def make_children(self):
-        for move in self.board_state.get_valid_moves():
-            for laser in (None, 0, 1):
-                self.children.append(MCST_Node(1 - self.team_to_move, self, (move, laser)))
-
-        def order_actions(child):
-            piece_type = self.board_state[child.action[0][0]].type
+        def order_moves(move):
+            piece_type = self.board_state[move[0]].type
             if piece_type == 'Pharaoh':
                 return 0
             elif piece_type == 'Djed':
@@ -578,11 +574,13 @@ class MCST_Node:
             else:
                 return 3
 
-        self.children.sort(key=order_actions)
+        for move in sorted(self.board_state.get_valid_moves(), key=order_moves):
+            for laser in (None, 0, 1):
+                self.children.append(MCST_Node(1 - self.team_to_move, self, (move, laser)))
 
-    def UCB(self, exploration_constant=2):
+    def UCB(self, exploration_constant=0.1):
         if self.times_visited == 0:
-            return inf
+            return 1
         else:
             team_toggle = 1 if self.team_to_move == 1 else -1
             return team_toggle * self.total_score / self.times_visited + exploration_constant * sqrt(log(self.parent.times_visited) / self.times_visited)
