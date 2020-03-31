@@ -311,7 +311,7 @@ class Pyramid(Piece):
 		self.type = 'Pyramid'
 
 	def get_actions(self):
-		return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tL', 'tR']
+		return ['tL', 'tR', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW']
 
 	def icon(self):
 		colour = 'yellow' if self.team == 0 else 'white'
@@ -328,10 +328,10 @@ class Djed(Piece):
 
 	def get_actions(self):
 		if self.aspect == 'NE':
-			return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tL']
+			return ['tL', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW']
 
 		elif self.aspect == 'NW':
-			return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW', 'tR']
+			return ['tR', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW']
 
 	def icon(self):
 		colour = 'yellow' if self.team == 0 else 'white'
@@ -396,7 +396,7 @@ def run_games():
 	# agent_0 = RandomAgent()
 	# agent_1 = RandomAgent()
 	# agent = LearningAgent()
-	agent = MCSTAgent()
+	agent = MCSTAgent(alpha=0.1)
 	board = BoardState()
 	num_games = 1
 	for _ in range(100):

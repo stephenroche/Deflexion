@@ -555,6 +555,8 @@ class MCST_Node:
         self.board_state = board_state
         self.times_visited = 0
         self.total_score = 0
+        self.average_value = None
+        self.UCB = 1
 
     def is_root(self):
         return self.parent == None
@@ -578,12 +580,17 @@ class MCST_Node:
             for laser in (None, 0, 1):
                 self.children.append(MCST_Node(1 - self.team_to_move, self, (move, laser)))
 
-    def UCB(self, exploration_constant=0.1):
-        if self.times_visited == 0:
-            return 1
-        else:
-            team_toggle = 1 if self.team_to_move == 1 else -1
-            return team_toggle * self.total_score / self.times_visited + exploration_constant * sqrt(log(self.parent.times_visited) / self.times_visited)
+    def update(self, value):
+        self.times_visited += 1
+        self.total_score += value
+        self.average_value = self.total_score / self.times_visited
+
+        team_toggle = 1 if self.team_to_move == 1 else -1
+        self.UCB = team_toggle * self.average_value + 1 / sqrt(self.times_visited + 1) * (1 - team_toggle * self.average_value)
+        # print('times_visited:', self.times_visited)
+        # print('total_score:', self.total_score)
+        # print('average_value:', self.average_value)
+        # print('UCB set to', self.UCB)
 
     def add_board_state(self):
         move, laser = self.action
