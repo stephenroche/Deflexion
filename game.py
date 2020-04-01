@@ -14,11 +14,11 @@ laser_directions = ['N', 'E', 'S', 'W']
 opposite = {'N': 'S', 'E': 'W', 'S': 'N', 'W': 'E'}
 
 class BoardState(dict):
-	def __init__(self):
+	def __init__(self, turn=0):
 		# dict.__init__()
 		self.width = 10
 		self.height = 8
-		self.turn = 0
+		self.turn = turn
 		self.num_turns = 0
 
 	def __getitem__(self, key):
@@ -129,7 +129,7 @@ class BoardState(dict):
 		self.num_turns += 1
 
 	def copy(self):
-		copied_board = BoardState()
+		copied_board = BoardState(self.turn)
 		for piece_pos, piece in self.items():
 			copied_board[piece_pos] = piece.copy()
 
@@ -401,7 +401,10 @@ def run_games():
 	num_games = 1
 	for _ in range(100):
 
-		board.set_start_state()
+		# board.set_start_state()
+		board[(1, 5)] = Pharaoh(0)
+		board[(0, 6)] = Pyramid(1, 'NE')
+		board[(8, 7)] = Pharaoh(1)
 
 		while True:
 			print('-----------------')
@@ -412,7 +415,7 @@ def run_games():
 			print(board)
 
 			# agent = agent_0 if board.turn == 0 else agent_1
-			move, laser = agent.get_action(board, board.turn, certainty=5)
+			move, laser = agent.get_action(board, certainty=5)
 			piece = board[move[0]]
 			print(piece, move, laser)
 			board.make_move(move)
@@ -428,7 +431,7 @@ def run_games():
 			# print(piece, move, laser)
 			# print(board)
 
-			# input()
+			input()
 
 		# print(piece, move, laser)
 		print(board)
@@ -453,4 +456,4 @@ run_games()
 # board = BoardState()
 # board.set_start_state()
 # agent = MCSTAgent()
-# print(agent.get_action(board, board.turn))
+# print(agent.get_action(board))

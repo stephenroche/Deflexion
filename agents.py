@@ -4,6 +4,8 @@ from featureExtractors import *
 from copy import deepcopy
 from math import log10, inf
 import time
+import pickle
+from os import path
 
 class Agent():
 	"""docstring for Agent"""
@@ -36,11 +38,16 @@ class RandomAgent(Agent):
 
 class LearningAgent(Agent):
 	"""docstring for LearningAgent"""
-	def __init__(self, feat_extractor=DeflexionExtractor(), discount=1, alpha=0.01):
+	def __init__(self, feat_extractor=DeflexionExtractor(), discount=1, alpha=0.01, load_weights=False):
 		self.weights = util.Counter()
 		self.feat_extractor = feat_extractor
 		self.discount = discount
 		self.alpha = alpha
+		if load_weights and path.isfiele('./weights.p'):
+			self.weights = pickle.load(open("weights.p", "rb"))
+			print('Loaded weights from weights.p...')
+		else:
+			self.weights = util.Counter()
 
 	def get_value(self, board_state):
 		result = board_state.is_win_state()
@@ -51,8 +58,8 @@ class LearningAgent(Agent):
 		else:
 			return self.weights * self.feat_extractor.get_features(board_state)
 
-	def get_action(self, board_state, team, epsilon=0, certainty=10):
-		team_toggle = 1 if team == 0 else -1
+	def get_action(self, board_state, epsilon=0, certainty=10):
+		team_toggle = 1 if board_state.turn == 0 else -1
 		moves = board_state.get_valid_moves()
 		probs = util.Counter()
 
@@ -104,19 +111,20 @@ class LearningAgent(Agent):
 		
 
 class MCSTAgent(LearningAgent):
-	def get_action(self, board_state, team, certainty=10):
+	def get_action(self, board_state, certainty=10):
 		start_time = time.time()
+		team = board_state.turn
 		root = util.MCST_Node(team, board_state=board_state)
 		root.times_visited = 1
 		simulations = 0
 		finished_simulations = 0
 		duplicates = 0
 		# while time.time() - start_time < 10:
-		while simulations < 20000:
+		while simulations < 1000:
 			simulations += 1
 			# Traverse
 			current = root
-			# print('root', end='')
+			print('root', end='')
 			while not current.is_leaf():
 				# current = max(current.children, key=lambda child: child.UCB())
 				best_UCB = -1
@@ -129,21 +137,21 @@ class MCSTAgent(LearningAgent):
 							best_UCB = child.UCB
 				current = best_child
 
-				# print(' ->', current.action, end='')
+				print(' ->', current.action, end='')
 
 			if current.times_visited != 0 and not current.board_state.is_win_state():
 				# Add children
 				current.make_children()
 				current = current.children[0]
-				# print(' ->', current.action, end='')
+				print(' ->', current.action, end='')
 
 			if not current.is_root() and not current.add_board_state():
 				current.parent.children.remove(current)
-				# print(': duplicate - cancelled')
+				print(': duplicate - cancelled')
 				duplicates += 1
 				continue
 
-			# print()
+			print()
 
 			# Evaluate leaf
 			value = self.get_value(current.board_state)
@@ -151,7 +159,7 @@ class MCSTAgent(LearningAgent):
 			# Ignore suicides
 			if value == (1 if current.team_to_move == 0 else -1):
 				current.parent.children.remove(current)
-				# print(': self kill - cancelled')
+				print(': self kill - cancelled')
 				continue
 
 			# Backpropagate
@@ -181,6 +189,10 @@ class MCSTAgent(LearningAgent):
 		features = self.feat_extractor.get_features(board_state)
 		for key, activation in features.items():
 			self.weights[key] += self.alpha * diff * activation
+
+		print('Saving weights.p...')
+		pickle.dump(self.weights, open("weights.p", "wb"))
+
 
 		print(simulations, 'simulations')
 		print(finished_simulations, 'finished_simulations')
