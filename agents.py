@@ -120,7 +120,7 @@ class MCSTAgent(LearningAgent):
 		finished_simulations = 0
 		duplicates = 0
 		# while time.time() - start_time < 10:
-		while simulations < 1000:
+		while simulations < 30:
 			simulations += 1
 			# Traverse
 			current = root
@@ -197,7 +197,7 @@ class MCSTAgent(LearningAgent):
 		print(simulations, 'simulations')
 		print(finished_simulations, 'finished_simulations')
 		print(duplicates, 'duplicates')
-		print('%d children, avg %d visitations' % (len(root.children), simulations // len(root.children)))
+		print('%d children, avg %d visitations' % (len(root.children), finished_simulations // len(root.children)))
 
 		mvc = max(root.children, key=lambda c: c.times_visited)
 		print('most visited child:')
@@ -213,6 +213,7 @@ class MCSTAgent(LearningAgent):
 			print('  action =', mvg.action)
 			print('  value =', mvg.average_value)
 			print('  team_to_move =', mvg.team_to_move)
+			print('  UCB =', mvg.UCB)
 
 			# hvg = max(mvc.children, key=lambda c: -team_toggle * c.total_score / c.times_visited)
 			# print('highest value grandchild:')
@@ -222,12 +223,13 @@ class MCSTAgent(LearningAgent):
 			# print('  team_to_move =', hvg.team_to_move)
 
 		if chosen_node.children:
-			wg = max(chosen_node.children, key=lambda c: c.UCB)
-			print('worse grandchild under chosen:')
+			wg = max(chosen_node.children, key=lambda c: c.times_visited)
+			print('worse grandchild under chosen (%d visits):' % chosen_node.times_visited)
 			print('  times_visited =', wg.times_visited)
 			print('  action =', wg.action)
 			print('  value =', wg.average_value)
 			print('  team_to_move =', wg.team_to_move)
+			print('  UCB =', wg.UCB)
 
 		print('value chosen =', chosen_node.average_value)
 

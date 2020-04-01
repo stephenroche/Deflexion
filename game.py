@@ -61,10 +61,11 @@ class BoardState(dict):
 		else:
 			sys.exit('Error: no pharaohs')
 
-	def get_valid_moves(self):
+	def get_valid_moves(self, opposition_team=False):
 		valid_moves = []
+		team_to_move = self.turn if not opposition_team else 1 - self.turn
 		for piece_pos, piece in self.items():
-			if piece.team != self.turn:
+			if piece.team != team_to_move:
 				continue
 
 			for action in piece.get_actions():
@@ -147,8 +148,8 @@ class BoardState(dict):
 		return next_board_state
 
 	# # Maybe not use
-	# def get_successor_states(self):
-	# 	return [self.get_successor_state(move) for move in self.get_valid_moves()]
+	# def get_successor_states(self, opposition_team=False):
+	# 	return [self.get_successor_state(move) for move in self.get_valid_moves(opposition_team=False)]
 
 	def __str__(self):
 		str_list = []
@@ -399,7 +400,7 @@ def run_games():
 	agent = MCSTAgent(alpha=0.1)
 	board = BoardState()
 	num_games = 1
-	for _ in range(100):
+	for _ in range(1):
 
 		# board.set_start_state()
 		board[(1, 5)] = Pharaoh(0)
@@ -415,7 +416,7 @@ def run_games():
 			print(board)
 
 			# agent = agent_0 if board.turn == 0 else agent_1
-			move, laser = agent.get_action(board, certainty=5)
+			move, laser = agent.get_action(board, certainty=0)
 			piece = board[move[0]]
 			print(piece, move, laser)
 			board.make_move(move)

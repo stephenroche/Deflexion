@@ -557,6 +557,7 @@ class MCST_Node:
         self.total_score = 0
         self.average_value = None
         self.UCB = 1
+        self.opponent_move_values = None
 
     def is_root(self):
         return self.parent == None
@@ -600,3 +601,15 @@ class MCST_Node:
             return True
 
         return False
+
+    def get_opponent_move_values(self):
+        if self.opponent_move_values:
+            return self.opponent_move_values
+        else:
+            self.opponent_move_values = {}
+            for move in self.board_state.get_valid_moves(opposition_team=True):
+                next_board_state = self.board_state.get_successor_state(move)
+                for laser in (None, 0, 1):
+                    if laser == None or self.board_state.fire_laser(laser) != None:
+                        self.opponent_move_values[]
+
