@@ -116,11 +116,12 @@ class MCSTAgent(LearningAgent):
 		team = board_state.turn
 		root = util.MCST_Node(team, board_state=board_state)
 		root.times_visited = 1
+		root.average_value = self.get_value(board_state)
 		simulations = 0
 		finished_simulations = 0
 		duplicates = 0
 		# while time.time() - start_time < 10:
-		while simulations < 30:
+		while simulations < 300:
 			simulations += 1
 			# Traverse
 			current = root
@@ -141,7 +142,7 @@ class MCSTAgent(LearningAgent):
 
 			if current.times_visited != 0 and not current.board_state.is_win_state():
 				# Add children
-				current.make_children()
+				current.make_children(value_function=self.get_value)
 				current = current.children[0]
 				print(' ->', current.action, end='')
 

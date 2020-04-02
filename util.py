@@ -557,7 +557,7 @@ class MCST_Node:
         self.total_score = 0
         self.average_value = None
         self.UCB = 1
-        self.opponent_move_values = None
+        self.opponent_action_values = None
 
     def is_root(self):
         return self.parent == None
@@ -565,21 +565,41 @@ class MCST_Node:
     def is_leaf(self):
         return self.children == []
 
-    def make_children(self):
-        def order_moves(move):
-            piece_type = self.board_state[move[0]].type
-            if piece_type == 'Pharaoh':
-                return 0
-            elif piece_type == 'Djed':
-                return 1
-            elif piece_type == 'Pyramid':
-                return 2
-            else:
-                return 3
+    def make_children(self, value_function):
+        if not self.is_root() and self.parent.opponent_action_values == None:
+            self.parent.set_opponent_action_values(value_function)
 
-        for move in sorted(self.board_state.get_valid_moves(), key=order_moves):
+        # opponent_action_values = self.parent.opponent_action_values
+        def order_actions(action):
+            if action in self.parent.opponent_action_values:
+                return self.parent.opponent_action_values[action]
+            elif (action[0], None) in self.parent.opponent_action_values:
+                return self.parent.average_value
+            else:
+                return self.parent.average_value
+
+
+        # def order_moves(move):
+        #     piece_type = self.board_state[move[0]].type
+        #     if piece_type == 'Pharaoh':
+        #         return 0
+        #     elif piece_type == 'Djed':
+        #         return 1
+        #     elif piece_type == 'Pyramid':
+        #         return 2
+        #     else:
+        #         return 3
+
+        actions = []
+        for move in self.board_state.get_valid_moves():
             for laser in (None, 0, 1):
-                self.children.append(MCST_Node(1 - self.team_to_move, self, (move, laser)))
+                actions.append( (move, laser) )
+
+        if not self.is_root():
+            actions.sort(key=order_actions, reverse=(True if self.team_to_move == 0 else False))
+
+        for action in actions:
+            self.children.append(MCST_Node(1 - self.team_to_move, self, action))
 
     def update(self, value):
         self.times_visited += 1
@@ -602,14 +622,19 @@ class MCST_Node:
 
         return False
 
-    def get_opponent_move_values(self):
-        if self.opponent_move_values:
-            return self.opponent_move_values
-        else:
-            self.opponent_move_values = {}
-            for move in self.board_state.get_valid_moves(opposition_team=True):
-                next_board_state = self.board_state.get_successor_state(move)
-                for laser in (None, 0, 1):
-                    if laser == None or self.board_state.fire_laser(laser) != None:
-                        self.opponent_move_values[]
+    def set_opponent_action_values(self, value_function):
+        self.opponent_action_values = {}
+        for move in self.board_state.get_valid_moves(opposition_team=True):
+            next_board_state_pre_laser = self.board_state.get_successor_state(move)
+            for laser in (None, 0, 1):
+                if laser == None:
+                    next_board_state = next_board_state_pre_laser
+
+                elif next_board_state_pre_laser.get_laser_path(laser)[-1] != None:
+                    next_board_state = next_board_state_pre_laser.get_successor_state(laser=laser)
+                    
+                else:
+                    continue
+
+                self.opponent_action_values[ (move, laser) ] = value_function(next_board_state)
 
