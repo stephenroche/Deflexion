@@ -43,7 +43,7 @@ class LearningAgent(Agent):
 		self.feat_extractor = feat_extractor
 		self.discount = discount
 		self.alpha = alpha
-		if load_weights and path.isfiele('./weights.p'):
+		if load_weights and path.isfile('./weights.p'):
 			self.weights = pickle.load(open("weights.p", "rb"))
 			print('Loaded weights from weights.p...')
 		else:
@@ -121,11 +121,11 @@ class MCSTAgent(LearningAgent):
 		finished_simulations = 0
 		duplicates = 0
 		# while time.time() - start_time < 10:
-		while simulations < 300:
+		while simulations < 1000:
 			simulations += 1
 			# Traverse
 			current = root
-			print('root', end='')
+			# print('root', end='')
 			while not current.is_leaf():
 				# current = max(current.children, key=lambda child: child.UCB())
 				best_UCB = -1
@@ -138,21 +138,21 @@ class MCSTAgent(LearningAgent):
 							best_UCB = child.UCB
 				current = best_child
 
-				print(' ->', current.action, end='')
+				# print(' ->', current.action, end='')
 
 			if current.times_visited != 0 and not current.board_state.is_win_state():
 				# Add children
 				current.make_children(value_function=self.get_value)
 				current = current.children[0]
-				print(' ->', current.action, end='')
+				# print(' ->', current.action, end='')
 
 			if not current.is_root() and not current.add_board_state():
 				current.parent.children.remove(current)
-				print(': duplicate - cancelled')
+				# print(': duplicate - cancelled')
 				duplicates += 1
 				continue
 
-			print()
+			# print()
 
 			# Evaluate leaf
 			value = self.get_value(current.board_state)
@@ -160,7 +160,7 @@ class MCSTAgent(LearningAgent):
 			# Ignore suicides
 			if value == (1 if current.team_to_move == 0 else -1):
 				current.parent.children.remove(current)
-				print(': self kill - cancelled')
+				# print(': self kill - cancelled')
 				continue
 
 			# Backpropagate

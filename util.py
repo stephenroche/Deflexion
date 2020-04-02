@@ -574,10 +574,9 @@ class MCST_Node:
             if action in self.parent.opponent_action_values:
                 return self.parent.opponent_action_values[action]
             elif (action[0], None) in self.parent.opponent_action_values:
-                return self.parent.average_value
+                return self.parent.opponent_action_values[ (action[0], None) ]
             else:
                 return self.parent.average_value
-
 
         # def order_moves(move):
         #     piece_type = self.board_state[move[0]].type

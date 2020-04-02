@@ -397,15 +397,15 @@ def run_games():
 	# agent_0 = RandomAgent()
 	# agent_1 = RandomAgent()
 	# agent = LearningAgent()
-	agent = MCSTAgent(alpha=0.1)
+	agent = MCSTAgent(alpha=0.01, load_weights=True)
 	board = BoardState()
 	num_games = 1
-	for _ in range(1):
+	for _ in range(10):
 
-		# board.set_start_state()
-		board[(1, 5)] = Pharaoh(0)
-		board[(0, 6)] = Pyramid(1, 'NE')
-		board[(8, 7)] = Pharaoh(1)
+		board.set_start_state()
+		# board[(1, 5)] = Pharaoh(0)
+		# board[(0, 6)] = Pyramid(1, 'NE')
+		# board[(8, 7)] = Pharaoh(1)
 
 		while True:
 			print('-----------------')
@@ -416,7 +416,7 @@ def run_games():
 			print(board)
 
 			# agent = agent_0 if board.turn == 0 else agent_1
-			move, laser = agent.get_action(board, certainty=0)
+			move, laser = agent.get_action(board, certainty=1)
 			piece = board[move[0]]
 			print(piece, move, laser)
 			board.make_move(move)
@@ -425,14 +425,9 @@ def run_games():
 				board.fire_laser(laser)
 
 			if board.is_win_state():
-				# print(feats)
 				break
 
-			# print(extractor.getFeatures(board))
-			# print(piece, move, laser)
-			# print(board)
-
-			input()
+			# input()
 
 		# print(piece, move, laser)
 		print(board)
