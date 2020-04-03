@@ -61,11 +61,10 @@ class BoardState(dict):
 		else:
 			sys.exit('Error: no pharaohs')
 
-	def get_valid_moves(self, opposition_team=False):
+	def get_valid_moves(self):
 		valid_moves = []
-		team_to_move = self.turn if not opposition_team else 1 - self.turn
 		for piece_pos, piece in self.items():
-			if piece.team != team_to_move:
+			if piece.team != self.turn:
 				continue
 
 			for action in piece.get_actions():
@@ -99,7 +98,8 @@ class BoardState(dict):
 		if check_valid and move not in self.get_valid_moves():
 			print('Board before invalid move:')
 			print(self)
-			exit('Invalid move: ' + str(move))
+			print('Invalid move: ' + str(move))
+			return
 
 		piece_pos, action = move
 		piece = self[piece_pos]
@@ -394,32 +394,35 @@ class Djed(Piece):
 
 def run_games():
 	extractor = DeflexionExtractor()
-	# agent_0 = RandomAgent()
-	# agent_1 = RandomAgent()
-	# agent = LearningAgent()
-	agent = MCSTAgent(alpha=0.01, load_weights=True)
+	keyboard_agent = KeyboardAgent()
+	MCST_agent = MCSTAgent(alpha=0.0003, load_weights=True)
 	board = BoardState()
 	num_games = 1
-	for _ in range(10):
+	for _ in range(1000):
 
 		board.set_start_state()
 		# board[(1, 5)] = Pharaoh(0)
 		# board[(0, 6)] = Pyramid(1, 'NE')
 		# board[(8, 7)] = Pharaoh(1)
 
-		while True:
+		while board.num_turns < 100:
 			print('-----------------')
 			features = extractor.get_features(board)
 			print('Features:', features)
-			print('Weights:', agent.weights)
-			print('Value:', agent.weights * features)
+			print('Weights:', MCST_agent.weights)
+			print('Value: % .6f' % (MCST_agent.weights * features))
 			print(board)
 
-			# agent = agent_0 if board.turn == 0 else agent_1
-			move, laser = agent.get_action(board, certainty=1)
+			if False and board.turn == 0:
+				move, laser = keyboard_agent.get_action(board)
+			else:
+				move, laser = MCST_agent.get_action(board, certainty=2)
+
+
+			# move, laser = MCST_agent.get_action(board, certainty=1)
 			piece = board[move[0]]
 			print(piece, move, laser)
-			board.make_move(move)
+			board.make_move(move, check_valid=True)
 
 			if laser != None:
 				board.fire_laser(laser)
@@ -437,7 +440,7 @@ def run_games():
 		num_games += 1
 		print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-		input()
+		# input()
 
 # cProfile.run('run_games()', sort='time')
 run_games()

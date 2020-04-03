@@ -623,8 +623,10 @@ class MCST_Node:
 
     def set_opponent_action_values(self, value_function):
         self.opponent_action_values = {}
-        for move in self.board_state.get_valid_moves(opposition_team=True):
-            next_board_state_pre_laser = self.board_state.get_successor_state(move)
+        board_state_reverse_turns = self.board_state.copy()
+        board_state_reverse_turns.turn = 1 - board_state_reverse_turns.turn
+        for move in board_state_reverse_turns.get_valid_moves():
+            next_board_state_pre_laser = board_state_reverse_turns.get_successor_state(move)
             for laser in (None, 0, 1):
                 if laser == None:
                     next_board_state = next_board_state_pre_laser

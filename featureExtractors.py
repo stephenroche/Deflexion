@@ -34,7 +34,7 @@ class DeflexionExtractor(FeatureExtractor):
 
     def get_features(self, board_state):
         feats = util.Counter()
-        feats['Gold\'s turn'] = 1 if board_state.turn == 0 else -1
+        # feats['Gold\'s turn'] = 1 if board_state.turn == 0 else -1
 
         # Piece based:
 
@@ -47,40 +47,56 @@ class DeflexionExtractor(FeatureExtractor):
                 continue
 
             if piece.type == 'Obelisk':
-                feats['Obelisks diff'] += 0.2 * team_toggle
+                feats['Obelisks diff'] += team_toggle
             elif piece.type == 'Pyramid':
-                feats['Pyramids diff'] += 0.2 * team_toggle
+                feats['Pyramids diff'] += team_toggle
+                feats['Defensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
+                feats['Offensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
             elif piece.type == 'Djed':
-                for x in (-1, 0, 1):
-                    for y in (-1, 0, 1):
-                        neighbour = board_state[(piece_pos[0] + x, piece_pos[1] + y)]
-                        if neighbour and neighbour.team != piece.team and neighbour.type in ('Obelisk', 'Pyramid'):
-                            feats['Enemies neighbouring Djeds'] += 0.1 * team_toggle
+                feats['Defensive Djeds'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
+                feats['Offensive Djeds'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
 
-            if piece_pos[0] == 0 or piece_pos[0] == board_state.width - 1 and piece.type in ('Pyramid', 'Djed'):
-                feats['Pieces on gold minus silver'] += 0.2 * team_toggle
+                # for x in (-1, 0, 1):
+                #     for y in (-1, 0, 1):
+                #         neighbour = board_state[(piece_pos[0] + x, piece_pos[1] + y)]
+                #         if neighbour and neighbour.team != piece.team and neighbour.type in ('Obelisk', 'Pyramid'):
+                #             feats['Enemies neighbouring Djeds'] += 0.1 * team_toggle
 
-            feats['Defensive pieces'] += 0.2 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
-            feats['Offensive pieces'] += 0.2 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
 
-        feats['Enemies neighbouring Djeds'] = self.attenuate(feats['Enemies neighbouring Djeds'])
-        feats['Defensive pieces'] = self.attenuate(feats['Defensive pieces'])
-        feats['Offensive pieces'] = self.attenuate(feats['Offensive pieces'])
-        feats['Pieces on gold minus silver'] = self.attenuate(feats['Pieces on gold minus silver'])
+            if piece_pos[0] == board_state.width - 1 and piece.type in ('Pyramid', 'Djed') and 'S' in piece.aspect:
+                feats['Refectors on gold minus silver'] += 1 / (abs(piece_pos[1] - pharaoh_positions[1][1]) + 2)
+            elif piece_pos[0] == 0 and piece.type in ('Pyramid', 'Djed') and 'N' in piece.aspect:
+                feats['Refectors on gold minus silver'] -= 1 / (abs(piece_pos[1] - pharaoh_positions[0][1]) + 2)
+
+        # feats['Enemies neighbouring Djeds'] = self.attenuate(feats['Enemies neighbouring Djeds'])
+        feats['Defensive Pyramids'] = self.attenuate(feats['Defensive Pyramids'])
+        feats['Offensive Pyramids'] = self.attenuate(feats['Offensive Pyramids'])
+        feats['Defensive Djeds'] = self.attenuate(feats['Defensive Djeds'])
+        feats['Offensive Djeds'] = self.attenuate(feats['Offensive Djeds'])
+        # feats['Refectors on gold minus silver'] = self.attenuate(feats['Refectors on gold minus silver'])
 
         # Path based:
 
         for laser in (0, 1):
             piece_from_laser = 1
             laser_path = board_state.get_laser_path(laser)
+            dist_from_pharaoh_0 = 10
+            dist_from_pharaoh_1 = 10
             for position in laser_path:
+                if position != None:
+                    dist_from_pharaoh_0 = min(dist_from_pharaoh_0, max(abs(position[0] - pharaoh_positions[0][0]), abs(position[1] - pharaoh_positions[0][1])))
+                    dist_from_pharaoh_1 = min(dist_from_pharaoh_1, max(abs(position[0] - pharaoh_positions[1][0]), abs(position[1] - pharaoh_positions[1][1])))
+
                 if position in board_state:
                     piece = board_state[position]
                     if position != laser_path[-1]:
-                        feats['Laser control'] += 0.2 * (1 if piece.team == 0 else -1) / (piece_from_laser + 1)
+                        feats['Laser control'] += 0.5 * (1 if piece.team == 0 else -1) / piece_from_laser
                         piece_from_laser += 1
                     else:
-                        feats['%ss threatened' % piece.__class__.__name__] += 0.2 * (1 if piece.team == 0 else -1)
+                        feats['%ss threatened' % piece.__class__.__name__] += 1 if piece.team == 0 else -1
+
+        if dist_from_pharaoh_0 != 0 and dist_from_pharaoh_1 != 0:
+            feats['Laser near Pharaoh'] = (1 / dist_from_pharaoh_0) - (1 / dist_from_pharaoh_1)
 
         # Paths from Pharaoh
         for team in (0, 1):
@@ -88,17 +104,23 @@ class DeflexionExtractor(FeatureExtractor):
             team_toggle = 1 if team == 0 else -1
             for start_pos, start_direction in [((x, y + 1), 'N'), ((x, y - 1), 'S'), ((x + 1, y), 'E'), ((x - 1, y), 'W')]:
                 dist_from_pharaoh = 1
-                for position in board_state.get_path(start_pos, start_direction):
+                path = board_state.get_path(start_pos, start_direction)
+                for position in path[:-1]:
                     if position in board_state:
                         if board_state[position].team == team:
-                            feats['Teammates from Pharaoh'] += 0.2 * team_toggle / sqrt(dist_from_pharaoh)
+                            feats['Teammates linking Pharaoh'] += 0.2 * team_toggle
                         else:
-                            feats['Enemies from Pharaoh'] += 0.2 * team_toggle / sqrt(dist_from_pharaoh)
+                            feats['Enemies linking Pharaoh'] += 0.2 * team_toggle
 
                     else:
-                        feats['Spaces from Pharaoh'] += 0.2 * team_toggle / sqrt(dist_from_pharaoh)
+                        feats['Spaces from Pharaoh'] += 0.2 * team_toggle / dist_from_pharaoh
 
                     dist_from_pharaoh += 1
+                if path[-1] != None:
+                    if board_state[path[-1]].team == team:
+                        feats['Teammates blocking Pharaoh'] += 0.2 * team_toggle
+                    else:
+                        feats['Enemies blocking Pharaoh'] += 0.2 * team_toggle
 
         return feats
 

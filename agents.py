@@ -56,7 +56,8 @@ class LearningAgent(Agent):
 		elif result == 'Win_1':
 			return -1
 		else:
-			return self.weights * self.feat_extractor.get_features(board_state)
+			value = self.weights * self.feat_extractor.get_features(board_state)
+			return sorted([-0.9, value, 0.9])[1]
 
 	def get_action(self, board_state, epsilon=0, certainty=10):
 		team_toggle = 1 if board_state.turn == 0 else -1
@@ -111,7 +112,10 @@ class LearningAgent(Agent):
 		
 
 class MCSTAgent(LearningAgent):
-	def get_action(self, board_state, certainty=10):
+	def get_action(self, board_state, certainty=None):
+		# self.weights.pop('Teammates from Pharaoh', None)
+		# self.weights['Pharaohs threatened'] = 0.9
+
 		start_time = time.time()
 		team = board_state.turn
 		root = util.MCST_Node(team, board_state=board_state)
@@ -120,82 +124,91 @@ class MCSTAgent(LearningAgent):
 		simulations = 0
 		finished_simulations = 0
 		duplicates = 0
-		# while time.time() - start_time < 10:
-		while simulations < 1000:
-			simulations += 1
-			# Traverse
-			current = root
-			# print('root', end='')
-			while not current.is_leaf():
-				# current = max(current.children, key=lambda child: child.UCB())
-				best_UCB = -1
-				for child in current.children:
-					if child.UCB > best_UCB:
-						best_child = child
-						if child.UCB >= 1:
-							break
-						else:
-							best_UCB = child.UCB
-				current = best_child
+		try:
+			# while time.time() - start_time < 10:
+			while simulations < 500:
+				simulations += 1
+				# Traverse
+				current = root
+				# print('root', end='')
+				while not current.is_leaf():
+					# current = max(current.children, key=lambda child: child.UCB())
+					best_UCB = -1
+					for child in current.children:
+						if child.UCB > best_UCB:
+							best_child = child
+							if child.UCB >= 1:
+								break
+							else:
+								best_UCB = child.UCB
+					current = best_child
 
-				# print(' ->', current.action, end='')
+					# print(' ->', current.action, end='')
 
-			if current.times_visited != 0 and not current.board_state.is_win_state():
-				# Add children
-				current.make_children(value_function=self.get_value)
-				current = current.children[0]
-				# print(' ->', current.action, end='')
+				if current.times_visited != 0 and not current.board_state.is_win_state():
+					# Add children
+					current.make_children(value_function=self.get_value)
+					current = current.children[0]
+					# print(' ->', current.action, end='')
 
-			if not current.is_root() and not current.add_board_state():
-				current.parent.children.remove(current)
-				# print(': duplicate - cancelled')
-				duplicates += 1
-				continue
+				if not current.is_root() and not current.add_board_state():
+					current.parent.children.remove(current)
+					# print(': duplicate - cancelled')
+					duplicates += 1
+					continue
 
-			# print()
+				# print()
 
-			# Evaluate leaf
-			value = self.get_value(current.board_state)
+				# Evaluate leaf
+				value = self.get_value(current.board_state)
 
-			# Ignore suicides
-			if value == (1 if current.team_to_move == 0 else -1):
-				current.parent.children.remove(current)
-				# print(': self kill - cancelled')
-				continue
+				# Ignore suicides
+				if value == (1 if current.team_to_move == 0 else -1):
+					current.parent.children.remove(current)
+					# print(': self kill - cancelled')
+					continue
 
-			# Backpropagate
-			# while current != None:
-			while not current.is_root():
-				current.update(value)
-				current = current.parent
+				# Backpropagate
+				# while current != None:
+				while not current.is_root():
+					current.update(value)
+					current = current.parent
 
-			finished_simulations += 1
+				finished_simulations += 1
 
+		except KeyboardInterrupt:
+			pass
 
-		team_toggle = 1 if team == 0 else -1
-		probs = util.Counter()
-		for child in root.children:
-			if child.times_visited == 0:
-				continue
-			value = child.average_value
-			probs[child] = 10**(team_toggle * certainty * value)
-		chosen_node = probs.sample()
+		if certainty == None:
+			chosen_node = max(root.children, key=lambda child: child.times_visited)
+
+		else:
+			team_toggle = 1 if team == 0 else -1
+			probs = util.Counter()
+			for child in root.children:
+				if child.times_visited == 0:
+					continue
+				value = child.average_value
+				probs[child] = 10**(team_toggle * certainty * value)
+			chosen_node = probs.sample()
 
 
 
 		# Update weights
 		best_node = max(root.children, key=lambda child: child.times_visited)
-		best_node_value = best_node.average_value
-		diff = (self.discount * best_node_value) - self.get_value(board_state)
+		diff = (self.discount * best_node.average_value) - self.get_value(board_state)
 		features = self.feat_extractor.get_features(board_state)
 		for key, activation in features.items():
 			self.weights[key] += self.alpha * diff * activation
 
 		print('Saving weights.p...')
-		pickle.dump(self.weights, open("weights.p", "wb"))
+		try:
+			pickle.dump(self.weights, open("weights.p", "wb"))
+		except:
+			print('Save failed')
 
 
-		print(simulations, 'simulations')
+		print('%d simulations in %.3f seconds' % (simulations, time.time() - start_time))
 		print(finished_simulations, 'finished_simulations')
 		print(duplicates, 'duplicates')
 		print('%d children, avg %d visitations' % (len(root.children), finished_simulations // len(root.children)))
