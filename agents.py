@@ -112,9 +112,9 @@ class LearningAgent(Agent):
 		
 
 class MCSTAgent(LearningAgent):
-	def get_action(self, board_state, certainty=None):
-		# self.weights.pop('Teammates from Pharaoh', None)
-		# self.weights['Pharaohs threatened'] = 0.9
+	def get_action(self, board_state, certainty=None, max_simulations=100000):
+		# self.weights.pop('Obelisks diff', None)
+		# self.weights['Pharaohs threatened'] = -0.5
 
 		start_time = time.time()
 		team = board_state.turn
@@ -126,7 +126,7 @@ class MCSTAgent(LearningAgent):
 		duplicates = 0
 		try:
 			# while time.time() - start_time < 10:
-			while simulations < 500:
+			while simulations < max_simulations:
 				simulations += 1
 				# Traverse
 				current = root

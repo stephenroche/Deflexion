@@ -46,9 +46,9 @@ class DeflexionExtractor(FeatureExtractor):
                 pharaoh_positions[piece.team] = piece_pos
                 continue
 
-            if piece.type == 'Obelisk':
-                feats['Obelisks diff'] += team_toggle
-            elif piece.type == 'Pyramid':
+            # if piece.type == 'Obelisk':
+            #     feats['Obelisks diff'] += team_toggle
+            if piece.type == 'Pyramid':
                 feats['Pyramids diff'] += team_toggle
                 feats['Defensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
                 feats['Offensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
@@ -96,7 +96,7 @@ class DeflexionExtractor(FeatureExtractor):
                         feats['%ss threatened' % piece.__class__.__name__] += 1 if piece.team == 0 else -1
 
         if dist_from_pharaoh_0 != 0 and dist_from_pharaoh_1 != 0:
-            feats['Laser near Pharaoh'] = (1 / dist_from_pharaoh_0) - (1 / dist_from_pharaoh_1)
+            feats['Laser near Pharaoh'] = 2**(-dist_from_pharaoh_0) - 2**(-dist_from_pharaoh_1)
 
         # Paths from Pharaoh
         for team in (0, 1):
@@ -121,6 +121,8 @@ class DeflexionExtractor(FeatureExtractor):
                         feats['Teammates blocking Pharaoh'] += 0.2 * team_toggle
                     else:
                         feats['Enemies blocking Pharaoh'] += 0.2 * team_toggle
+
+        feats.pop('Obelisks threatened', None)
 
         return feats
 
