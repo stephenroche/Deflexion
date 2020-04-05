@@ -396,17 +396,17 @@ def run_games():
 	extractor = DeflexionExtractor()
 	random_agent = RandomAgent()
 	keyboard_agent = KeyboardAgent()
-	MCST_agent = MCSTAgent(alpha=0.00, load_weights=True)
+	MCST_agent = MCSTAgent(alpha=0.001, load_weights=True)
 	board = BoardState()
 	num_games = 1
-	for _ in range(1):
+	for _ in range(1000):
 
 		board.set_start_state()
 		# board[(1, 5)] = Pharaoh(0)
 		# board[(0, 6)] = Pyramid(1, 'NE')
 		# board[(8, 7)] = Pharaoh(1)
 
-		while board.num_turns < 1000:
+		while board.num_turns < 100:
 			print('-----------------')
 			features = extractor.get_features(board)
 			print('Features:', features)
@@ -414,11 +414,11 @@ def run_games():
 			print('Value: % .6f' % (MCST_agent.weights * features))
 			print(board)
 
-			if board.turn == 0:
+			if False and board.turn == 0:
 				move, laser = keyboard_agent.get_action(board)
 				# move, laser = random_agent.get_action(board)
 			else:
-				move, laser = MCST_agent.get_action(board, max_simulations=100000)#, certainty=10, max_simulations=10000)
+				move, laser = MCST_agent.get_action(board, certainty=10, max_simulations=10000)
 
 
 			piece = board[move[0]]

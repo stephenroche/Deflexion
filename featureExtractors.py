@@ -77,11 +77,11 @@ class DeflexionExtractor(FeatureExtractor):
 
         # Path based:
 
+        dist_from_pharaoh_0 = 10
+        dist_from_pharaoh_1 = 10
         for laser in (0, 1):
             piece_from_laser = 1
             laser_path = board_state.get_laser_path(laser)
-            dist_from_pharaoh_0 = 10
-            dist_from_pharaoh_1 = 10
             for position in laser_path:
                 if position != None:
                     dist_from_pharaoh_0 = min(dist_from_pharaoh_0, max(abs(position[0] - pharaoh_positions[0][0]), abs(position[1] - pharaoh_positions[0][1])))
