@@ -414,11 +414,11 @@ def run_games():
 			print('Value: % .6f' % (MCST_agent.weights * features))
 			print(board)
 
-			if False and board.turn == 0:
+			if board.turn == 0:
 				move, laser = keyboard_agent.get_action(board)
 				# move, laser = random_agent.get_action(board)
 			else:
-				move, laser = MCST_agent.get_action(board, certainty=10, max_simulations=10000)
+				move, laser = MCST_agent.get_action(board, max_simulations=100000)#, certainty=10, max_simulations=10000)
 
 
 			piece = board[move[0]]
