@@ -50,11 +50,11 @@ class DeflexionExtractor(FeatureExtractor):
             #     feats['Obelisks diff'] += team_toggle
             if piece.type == 'Pyramid':
                 feats['Pyramids diff'] += team_toggle
-                feats['Defensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
-                feats['Offensive Pyramids'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
+                feats['Defensive Pyramids'] += 0.5 * team_toggle / (util.manhattanDistance(piece_pos, pharaoh_positions[piece.team]) + 1)
+                feats['Offensive Pyramids'] += 0.5 * team_toggle / (util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team]) + 1)
             elif piece.type == 'Djed':
-                feats['Defensive Djeds'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[piece.team])
-                feats['Offensive Djeds'] += 0.5 * team_toggle / util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team])
+                feats['Defensive Djeds'] += 0.5 * team_toggle / (util.manhattanDistance(piece_pos, pharaoh_positions[piece.team]) + 1)
+                feats['Offensive Djeds'] += 0.5 * team_toggle / (util.manhattanDistance(piece_pos, pharaoh_positions[1 - piece.team]) + 1)
 
                 # for x in (-1, 0, 1):
                 #     for y in (-1, 0, 1):

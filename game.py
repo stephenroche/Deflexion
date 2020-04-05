@@ -415,10 +415,10 @@ def run_games():
 			print(board)
 
 			if board.turn == 0:
-				# move, laser = keyboard_agent.get_action(board)
-				move, laser = random_agent.get_action(board)
+				move, laser = keyboard_agent.get_action(board)
+				# move, laser = random_agent.get_action(board)
 			else:
-				move, laser = MCST_agent.get_action(board, max_simulations=10000)#, certainty=10, max_simulations=10000)
+				move, laser = MCST_agent.get_action(board, max_simulations=100000)#, certainty=10, max_simulations=10000)
 
 
 			piece = board[move[0]]
