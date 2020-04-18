@@ -6,13 +6,15 @@
 </head>
 
 <body onload="startGame()">
+
+<h1>Deflexion</h1>
+
+<canvas id="gameArea"></canvas>
 <script src="deflexion.js"></script>
 
 <div style="text-align:center;width:480px;">
-  <button onmousedown="moveup()" onmouseup="clearmove()" ontouchstart="moveup()">UP</button><br><br>
-  <button onmousedown="moveleft()" onmouseup="clearmove()" ontouchstart="moveleft()">LEFT</button>
-  <button onmousedown="moveright()" onmouseup="clearmove()" ontouchstart="moveright()">RIGHT</button><br><br>
-  <button onmousedown="movedown()" onmouseup="clearmove()" ontouchstart="movedown()">DOWN</button>
+  <button onmousedown="gameArea.buttons[0].isPressed = true" onmouseup="gameArea.buttons[0].isPressed = false" ontouchstart="moveup()">Laser 0</button>
+  <button onmousedown="gameArea.buttons[1].isPressed = true" onmouseup="gameArea.buttons[1].isPressed = false" ontouchstart="moveleft()">Laser 1</button>
 </div>
 
 </body>
