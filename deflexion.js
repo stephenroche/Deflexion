@@ -54,6 +54,7 @@ var gameArea = {
         this.boardState.pieces.set([3, 3], new Djed(0, 'NE'));
         this.boardState.pieces.set([0, 0], new Obelisk(1));
         this.boardState.pieces.set([4, 7], new Pharaoh(0));
+        this.boardState.setStartState();
     },
     stop : function() {
         clearInterval(this.interval);
@@ -132,7 +133,28 @@ class BoardState {
     constructor(turn=0) {
         this.pieces = new Map();
         this.turn = turn;
-        this.num_turns = 0;
+        this.numTurns = 0;
+    }
+    setStartState() {
+        this.pieces.clear();
+
+        for (var [team, position] of [[0, [4, 7]], [1, [5, 0]]]) {
+            this.pieces.set(position, new Pharaoh(team));
+        }
+        for (var [team, position] of [[0, [3, 7]], [0, [5, 7]], [1, [4, 0]], [1, [6, 0]]]) {
+            this.pieces.set(position, new Obelisk(team));
+        }
+        for (var [team, position, aspect] of [[0, [2, 7], 'NW'], [0, [2, 4], 'NW'], [0, [2, 3], 'SW'], [0, [3, 2], 'NW'], [0, [7, 6], 'NE'], [0, [9, 4], 'SW'], [0, [9, 3], 'NW'], [1, [7, 0], 'SE'], [1, [7, 3], 'SE'], [1, [7, 4], 'NE'], [1, [6, 5], 'SE'], [1, [2, 1], 'SW'], [1, [0, 3], 'NE'], [1, [0, 4], 'SE']]) {
+            this.pieces.set(position, new Pyramid(team, aspect));
+        }
+        for (var [team, position, aspect] of [[0, [4, 4], 'NW'], [0, [5, 4], 'NE'], [1, [4, 3], 'Ne'], [1, [5, 3], 'NW']]) {
+            this.pieces.set(position, new Djed(team, aspect));
+        }
+        // for team, position, aspect in [(0, (4, 3), 'NW'), (0, (5, 3), 'NE'), (1, (4, 4), 'NE'), (1, (5, 4), 'NW')]:
+        //     self[position] = Djed(team, aspect)
+
+        this.turn = 0;
+        this.numTurns = 0;
     }
 }
 
@@ -163,7 +185,7 @@ class Piece {
     }
     drawIcon(ctx) {
         ctx.fillStyle = "#FF0000";
-        ctx.fillRect(-50, -50, 100, 100);
+        ctx.fillRect(-49, -49, 98, 98);
     }
 }
 
@@ -172,7 +194,7 @@ class Pharaoh extends Piece {
         super(team, aspect);
         this.type = 'Pharaoh';
     }
-    get_actions() {
+    getActions() {
         return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
     }
     drawIcon(ctx) {
@@ -185,11 +207,11 @@ class Pharaoh extends Piece {
         }
 
         ctx.fillStyle = dark;
-        ctx.fillRect(-50, -50, 100, 100);
+        ctx.fillRect(-49, -49, 98, 98);
 
         ctx.beginPath();
         ctx.strokeStyle = light;
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 8;
         ctx.strokeRect(-45, -45, 90, 90);
 
         ctx.beginPath();
@@ -207,7 +229,7 @@ class Obelisk extends Piece {
         super(team, aspect);
         this.type = 'Obelisk';
     }
-    get_actions() {
+    getActions() {
         return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
     }
     drawIcon(ctx) {
@@ -220,11 +242,11 @@ class Obelisk extends Piece {
         }
 
         ctx.fillStyle = dark;
-        ctx.fillRect(-50, -50, 100, 100);
+        ctx.fillRect(-49, -49, 98, 98);
 
         ctx.beginPath();
         ctx.strokeStyle = light;
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 8;
         ctx.strokeRect(-45, -45, 90, 90);
 
         ctx.fillStyle = light;
@@ -237,7 +259,7 @@ class Pyramid extends Piece {
         super(team, aspect);
         this.type = 'Pyramid';
     }
-    get_actions() {
+    getActions() {
         return ['tL', 'tR', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
     }
     drawIcon(ctx) {
@@ -250,12 +272,12 @@ class Pyramid extends Piece {
         }
 
         ctx.fillStyle = dark;
-        ctx.fillRect(-50, -50, 100, 100);
+        ctx.fillRect(-49, -49, 98, 98);
 
         ctx.beginPath();
-        ctx.moveTo(-50, -50);
-        ctx.lineTo(50, 50);
-        ctx.lineTo(-50, 50);
+        ctx.moveTo(-49, -49);
+        ctx.lineTo(49, 49);
+        ctx.lineTo(-49, 49);
         ctx.closePath();
         ctx.fillStyle = light;
         ctx.fill();
@@ -264,7 +286,7 @@ class Pyramid extends Piece {
         ctx.rect(-45, -45, 90, 90);
         ctx.lineTo(45, 45);
         ctx.strokeStyle = light;
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 8;
         ctx.stroke();
     }
 }
@@ -274,7 +296,7 @@ class Djed extends Piece {
         super(team, aspect);
         this.type = 'Djed';
     }
-    get_actions() {
+    getActions() {
         if (this.aspect == 'NE') {
             return ['tL', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
         } else if (this.aspect == 'NW') {
@@ -291,13 +313,13 @@ class Djed extends Piece {
         }
 
         ctx.fillStyle = dark;
-        ctx.fillRect(-50, -50, 100, 100);
+        ctx.fillRect(-49, -49, 98, 98);
 
         ctx.beginPath();
         ctx.rect(-45, -45, 90, 90);
         ctx.lineTo(45, 45);
         ctx.strokeStyle = light;
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 8;
         ctx.stroke();
     }
 }
