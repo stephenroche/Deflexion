@@ -52,9 +52,14 @@ var gameArea = {
         this.boardState.pieces.set([1, 2], new Pyramid(0, 'SE'));
         this.boardState.pieces.set([5, 3], new Pyramid(1, 'SW'));
         this.boardState.pieces.set([3, 3], new Djed(0, 'NE'));
-        this.boardState.pieces.set([0, 0], new Obelisk(1));
+        var pos = [0, 0];
+        var pos2 = [0, 0];
+        this.boardState.pieces.set(pos, new Obelisk(1));
         this.boardState.pieces.set([4, 7], new Pharaoh(0));
-        this.boardState.setStartState();
+        // this.boardState.setStartState();
+        console.log(this.boardState.pieces.keys());
+        console.log(this.boardState.pieces.delete(pos2));
+        console.log(this.boardState.isWinState());
     },
     stop : function() {
         clearInterval(this.interval);
@@ -155,6 +160,25 @@ class BoardState {
 
         this.turn = 0;
         this.numTurns = 0;
+    }
+    isWinState() {
+        var pharaohsFound = [false, false];
+
+        for (var piece of this.pieces.values()) {
+            if (piece.type == 'Pharaoh') {
+                pharaohsFound[piece.team] = true;
+            }
+        }
+        if (pharaohsFound[0] && pharaohsFound[1]) {
+            return false;
+        } else if (pharaohsFound[0]) {
+            return 'Win_0';
+        } else if (pharaohsFound[1]) {
+            return 'Win_1';
+        } else {
+            alert('Error: no pharaohs');
+            return 'Error';
+        }
     }
 }
 
