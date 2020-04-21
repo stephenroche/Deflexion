@@ -49,16 +49,26 @@ var gameArea = {
                 button.isPressed = false;
             }
         });
-        this.boardState.pieces.set([1, 2], new Pyramid(0, 'SE'));
-        this.boardState.pieces.set([5, 3], new Pyramid(1, 'SW'));
-        this.boardState.pieces.set([3, 3], new Djed(0, 'NE'));
-        var pos = [0, 0];
-        var pos2 = [0, 0];
-        this.boardState.pieces.set(pos, new Obelisk(1));
-        this.boardState.pieces.set([4, 7], new Pharaoh(0));
-        // this.boardState.setStartState();
-        console.log(this.boardState.pieces.keys());
-        console.log(this.boardState.pieces.delete(pos2));
+        // this.boardState.pieces.set([1, 2], new Pyramid(0, 'SE'));
+        // this.boardState.pieces.set([5, 3], new Pyramid(1, 'SW'));
+        // this.boardState.pieces.set([3, 3], new Djed(0, 'NE'));
+        // var pos = [0, 0];
+        // var pos2 = [0, 0];
+        // this.boardState.pieces.set(pos, new Obelisk(1));
+        // this.boardState.pieces.set([4, 7], new Pharaoh(0));
+        // // this.boardState.setStartState();
+        // console.log(this.boardState.pieces.keys());
+        // console.log(this.boardState.pieces.delete(pos2));
+        // console.log(this.boardState.isWinState());
+
+        this.boardState[1][2] = new Pyramid(0, 'SE');
+        this.boardState[5][3] = new Pyramid(1, 'SW');
+        this.boardState[3][3] = new Djed(0, 'NE');
+        this.boardState[0][0] = new Obelisk(1);
+        this.boardState[4][7] = new Pharaoh(0);
+        console.log(this.boardState);
+        this.boardState.setStartState();
+        delete this.boardState[4][3];
         console.log(this.boardState.isWinState());
     },
     stop : function() {
@@ -99,7 +109,7 @@ var gameArea = {
         this.drawPieces();
     },
     drawPieces : function() {
-        for (var [pos, piece] of this.boardState.pieces) {
+        for (var [pos, piece] of this.boardState) {
             var [x, y] = pos;
             var rotation = 0;
             piece.draw(this.ctx, 100 * (x + 1), 100 * (y + 1), rotation);
@@ -134,29 +144,60 @@ function Button(x, y) {
     }
 }
 
-class BoardState {
+
+
+class BoardState extends Array {
     constructor(turn=0) {
-        this.pieces = new Map();
+        super();
+        this.clear()
         this.turn = turn;
         this.numTurns = 0;
     }
-    setStartState() {
-        this.pieces.clear();
+    [Symbol.iterator]() {
+        let index = 0;
+        let x = 0;
+        let y = -1;
+        return {
+            next: () => {
+                let runOnce = false;
+                while ((x < WIDTH && !this[x][y]) || !runOnce) {
+                    runOnce = true;
+                    if (y < HEIGHT - 1) {
+                        y++;
+                    } else {
+                        x++;
+                        y = 0;
+                    }
+                }
 
-        for (var [team, position] of [[0, [4, 7]], [1, [5, 0]]]) {
-            this.pieces.set(position, new Pharaoh(team));
+                if (x < WIDTH) {
+                    return {value: [[x, y], this[x][y]], done: false}
+                } else {
+                    return {done: true}
+                }
+            }
         }
-        for (var [team, position] of [[0, [3, 7]], [0, [5, 7]], [1, [4, 0]], [1, [6, 0]]]) {
-            this.pieces.set(position, new Obelisk(team));
+    }
+    clear() {
+        for (let x = 0; x < WIDTH; x++) {
+            this[x] = [];
         }
-        for (var [team, position, aspect] of [[0, [2, 7], 'NW'], [0, [2, 4], 'NW'], [0, [2, 3], 'SW'], [0, [3, 2], 'NW'], [0, [7, 6], 'NE'], [0, [9, 4], 'SW'], [0, [9, 3], 'NW'], [1, [7, 0], 'SE'], [1, [7, 3], 'SE'], [1, [7, 4], 'NE'], [1, [6, 5], 'SE'], [1, [2, 1], 'SW'], [1, [0, 3], 'NE'], [1, [0, 4], 'SE']]) {
-            this.pieces.set(position, new Pyramid(team, aspect));
+    }
+    setStartState() {
+        this.clear();
+
+        for (const [team, [x, y]] of [[0, [4, 7]], [1, [5, 0]]]) {
+            this[x][y] = new Pharaoh(team);
         }
-        for (var [team, position, aspect] of [[0, [4, 4], 'NW'], [0, [5, 4], 'NE'], [1, [4, 3], 'Ne'], [1, [5, 3], 'NW']]) {
-            this.pieces.set(position, new Djed(team, aspect));
+        for (var [team, [x, y]] of [[0, [3, 7]], [0, [5, 7]], [1, [4, 0]], [1, [6, 0]]]) {
+            this[x][y] = new Obelisk(team);
         }
-        // for team, position, aspect in [(0, (4, 3), 'NW'), (0, (5, 3), 'NE'), (1, (4, 4), 'NE'), (1, (5, 4), 'NW')]:
-        //     self[position] = Djed(team, aspect)
+        for (var [team, [x, y], aspect] of [[0, [2, 7], 'NW'], [0, [2, 4], 'NW'], [0, [2, 3], 'SW'], [0, [3, 2], 'NW'], [0, [7, 6], 'NE'], [0, [9, 4], 'SW'], [0, [9, 3], 'NW'], [1, [7, 0], 'SE'], [1, [7, 3], 'SE'], [1, [7, 4], 'NE'], [1, [6, 5], 'SE'], [1, [2, 1], 'SW'], [1, [0, 3], 'NE'], [1, [0, 4], 'SE']]) {
+            this[x][y] = new Pyramid(team, aspect);
+        }
+        for (var [team, [x, y], aspect] of [[0, [4, 4], 'NW'], [0, [5, 4], 'NE'], [1, [4, 3], 'Ne'], [1, [5, 3], 'NW']]) {
+            this[x][y] = new Djed(team, aspect);
+        }
 
         this.turn = 0;
         this.numTurns = 0;
@@ -164,7 +205,7 @@ class BoardState {
     isWinState() {
         var pharaohsFound = [false, false];
 
-        for (var piece of this.pieces.values()) {
+        for (const [pos, piece] of this) {
             if (piece.type == 'Pharaoh') {
                 pharaohsFound[piece.team] = true;
             }
