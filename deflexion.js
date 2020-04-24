@@ -32,6 +32,20 @@ var gameArea = {
         let diffY = this.pixelY - 100 * (grabbedPieceY + 1);
         return getAngle(diffX, diffY) - this.grabbedAngle;
     },
+    get grabbedPieceMove() {
+        if (this.grabbedAngle) {
+            let turnedAngle = this.turnedAngle;
+            if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
+                return [this.grabbedPiece, ['t', 'R']];
+            } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
+                return [this.grabbedPiece, ['t', 'L']];
+            } else {
+                return [this.grabbedPiece, ['t', null]];
+            }
+        } else {
+            return [this.grabbedPiece, ['m', this.hoverSquare[0] - this.grabbedPiece[0], this.hoverSquare[1] - this.grabbedPiece[1]]];
+        }
+    },
     start : function() {
         this.canvas.width = 100 * (WIDTH + 1);
         this.canvas.height = 100 * (HEIGHT + 1);
@@ -162,6 +176,13 @@ var gameArea = {
     },
     drawGlow : function() {
         let [glowX, glowY] = this.hoverSquare;
+        // console.log(this.boardState.getValidMoves());
+        // console.log(this.grabbedPieceMove);
+        // console.log(JSON.stringify(this.boardState.getValidMoves()[2]));
+        // console.log(JSON.stringify(this.grabbedPieceMove));
+        if (!this.boardState.getValidMoves().some(m => JSON.stringify(m) === JSON.stringify(this.grabbedPieceMove))) {
+            return;
+        }
         this.ctx.beginPath();
         this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
         this.ctx.lineWidth = 10;
@@ -574,13 +595,13 @@ class Pharaoh extends Piece {
         this.type = 'Pharaoh';
     }
     getActions() {
-        return [['m', -1, 0],
-                ['m', -1, 1],
-                ['m', 0, 1],
-                ['m', 1, 1],
-                ['m', 1, 0],
+        return [['m', 0, -1],
                 ['m', 1, -1],
-                ['m', 0, -1],
+                ['m', 1, 0],
+                ['m', 1, 1],
+                ['m', 0, 1],
+                ['m', -1, 1],
+                ['m', -1, 0],
                 ['m', -1, -1]];
     }
     drawIcon(ctx) {
@@ -617,13 +638,13 @@ class Obelisk extends Piece {
         this.type = 'Obelisk';
     }
     getActions() {
-        return [['m', -1, 0],
-                ['m', -1, 1],
-                ['m', 0, 1],
-                ['m', 1, 1],
-                ['m', 1, 0],
+        return [['m', 0, -1],
                 ['m', 1, -1],
-                ['m', 0, -1],
+                ['m', 1, 0],
+                ['m', 1, 1],
+                ['m', 0, 1],
+                ['m', -1, 1],
+                ['m', -1, 0],
                 ['m', -1, -1]];
     }
     drawIcon(ctx) {
@@ -657,13 +678,13 @@ class Pyramid extends Piece {
     getActions() {
         return [['t', 'L'],
                 ['t', 'R'],
-                ['m', -1, 0],
-                ['m', -1, 1],
-                ['m', 0, 1],
-                ['m', 1, 1],
-                ['m', 1, 0],
-                ['m', 1, -1],
                 ['m', 0, -1],
+                ['m', 1, -1],
+                ['m', 1, 0],
+                ['m', 1, 1],
+                ['m', 0, 1],
+                ['m', -1, 1],
+                ['m', -1, 0],
                 ['m', -1, -1]];
     }
     drawIcon(ctx) {
@@ -704,13 +725,13 @@ class Djed extends Piece {
     getActions() {
         return [['t', 'L'],
                 ['t', 'R'],
-                ['m', -1, 0],
-                ['m', -1, 1],
-                ['m', 0, 1],
-                ['m', 1, 1],
-                ['m', 1, 0],
-                ['m', 1, -1],
                 ['m', 0, -1],
+                ['m', 1, -1],
+                ['m', 1, 0],
+                ['m', 1, 1],
+                ['m', 0, 1],
+                ['m', -1, 1],
+                ['m', -1, 0],
                 ['m', -1, -1]];
     }
     drawIcon(ctx) {
