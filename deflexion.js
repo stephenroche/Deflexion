@@ -2,9 +2,6 @@
 
 const WIDTH = 10;
 const HEIGHT = 8;
-const ASPECTS = ['NE', 'SE', 'SW', 'NW'];
-const OPPOSITE = {'N': 'S', 'E': 'W', 'S': 'N', 'W': 'E'};
-const ANGLES = {'NE': 0, 'SE': 0.5 * Math.PI, 'SW': Math.PI, 'NW': 1.5 * Math.PI};
 const GOLD_PIECE = "#FFF000";
 const DARK_GOLD_PIECE = "#BBB000";
 const SILVER_PIECE = "#F0F0F0";
@@ -66,7 +63,7 @@ var gameArea = {
                 let diffX = this.pixelX - 100 * (squareX + 1);
                 let diffY = this.pixelY - 100 * (squareY + 1);
                 let distFromCentre = Math.sqrt(diffX**2 + diffY**2);
-                if (20 < distFromCentre && distFromCentre < 40) {
+                if (20 < distFromCentre && distFromCentre < 40 && ['Pyramid', 'Djed'].includes(this.boardState[squareX][squareY].type)) {
                     this.grabbedAngle = getAngle(diffX, diffY);
                 } else {
                     this.grabbedPixelX = this.pixelX;
@@ -172,7 +169,7 @@ var gameArea = {
     },
     drawSwivel : function() {
         let [x, y] = this.pixelToSquare(this.pixelX, this.pixelY);
-        if (this.boardState[x] && this.boardState[x][y]) {
+        if (this.boardState[x] && this.boardState[x][y] && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
             this.ctx.lineWidth = 4;
             // this.ctx.lineCap = 'round';
             this.ctx.strokeStyle = "hsla(0, 0%, 40%, 0.7)";
@@ -363,10 +360,10 @@ class BoardState extends Array {
         for (var [team, [x, y]] of [[0, [3, 7]], [0, [5, 7]], [1, [4, 0]], [1, [6, 0]]]) {
             this[x][y] = new Obelisk(team);
         }
-        for (var [team, [x, y], aspect] of [[0, [2, 7], 'NW'], [0, [2, 4], 'NW'], [0, [2, 3], 'SW'], [0, [3, 2], 'NW'], [0, [7, 6], 'NE'], [0, [9, 4], 'SW'], [0, [9, 3], 'NW'], [1, [7, 0], 'SE'], [1, [7, 3], 'SE'], [1, [7, 4], 'NE'], [1, [6, 5], 'SE'], [1, [2, 1], 'SW'], [1, [0, 3], 'NE'], [1, [0, 4], 'SE']]) {
+        for (var [team, [x, y], aspect] of [[0, [2, 7], [-1, -1]], [0, [2, 4], [-1, -1]], [0, [2, 3], [-1, 1]], [0, [3, 2], [-1, -1]], [0, [7, 6], [1, -1]], [0, [9, 4], [-1, 1]], [0, [9, 3], [-1, -1]], [1, [7, 0], [1, 1]], [1, [7, 3], [1, 1]], [1, [7, 4], [1, -1]], [1, [6, 5], [1, 1]], [1, [2, 1], [-1, 1]], [1, [0, 3], [1, -1]], [1, [0, 4], [1, 1]]]) {
             this[x][y] = new Pyramid(team, aspect);
         }
-        for (var [team, [x, y], aspect] of [[0, [4, 4], 'NW'], [0, [5, 4], 'NE'], [1, [4, 3], 'NE'], [1, [5, 3], 'NW']]) {
+        for (var [team, [x, y], aspect] of [[0, [4, 4], [-1, -1]], [0, [5, 4], [1, -1]], [1, [4, 3], [1, -1]], [1, [5, 3], [-1, -1]]]) {
             this[x][y] = new Djed(team, aspect);
         }
 
@@ -403,17 +400,8 @@ class BoardState extends Array {
                 let [nextX, nextY] = piecePos;
 
                 if (action[0] == 'm') {
-                    if (action.includes('N')) {
-                        nextY -= 1;
-                    } else if (action.includes('S')) {
-                        nextY += 1;
-                    }
-
-                    if (action.includes('E')) {
-                        nextX += 1;
-                    } else if (action.includes('W')) {
-                        nextX -= 1;
-                    }
+                    nextX += action[1];
+                    nextY += action[2];
 
                     if (nextX < 0 || nextX >= WIDTH || nextX == (WIDTH - 1) * piece.team) {
                         continue;
@@ -505,38 +493,39 @@ class BoardState extends Array {
                     path.push('hit');
                     break;
                 } else if (piece.type == 'Pyramid') {
-                    if (piece.aspect.includes(direction)) {
+                    if (piece.aspect[0] * direction[0] + piece.aspect[1] * direction[1] == 1) {
                         path.push('hit');
                         break;
                     } else {
-                        direction = piece.aspect.replace(OPPOSITE[direction], '');
+                        if (direction[0]) {
+                            direction = [0, piece.aspect[1]];
+                        } else {
+                            direction = [piece.aspect[0], 0];
+                        }
                     }
                 } else if (piece.type == 'Djed') {
                     var aspect = piece.aspect;
-                    if (aspect.includes(direction)) {
-                        aspect = [OPPOSITE[aspect[0]], OPPOSITE[aspect[1]]].join('');
+                    if (aspect[0] * direction[0] + aspect[1] * direction[1] == 1) {
+                        aspect = [-aspect[0], -aspect[1]];
                     }
-                    direction = aspect.replace(OPPOSITE[direction], '');
+                    if (direction[0]) {
+                        direction = [0, aspect[1]];
+                    } else {
+                        direction = [aspect[0], 0];
+                    }
                 }
             }
 
-            if (direction == 'N') {
-                y -= 1;
-            } else if (direction == 'S') {
-                y += 1;
-            } else if (direction == 'E') {
-                x += 1;
-            } else if (direction == 'W') {
-                x -= 1;
-            }
+            x += direction[0];
+            y += direction[1];
         }
         return path;
     }
     getLaserPath(laser) {
         if (laser == 0) {
-            return this.getPath([9, 8], 'N');
+            return this.getPath([9, 8], [0, -1]);
         } else if (laser == 1) {
-            return this.getPath([0, -1], 'S');
+            return this.getPath([0, -1], [0, 1]);
         }
     }
     // def fire_laser(self, laser):
@@ -554,9 +543,9 @@ class Piece {
     }
     turn(direction) {
         if (direction == 'L') {
-            this.aspect = ASPECTS[(ASPECTS.indexOf(this.aspect) + 3) % 4];
+            this.aspect = [this.aspect[1], -this.aspect[0]];
         } else if (direction == 'R') {
-            this.aspect = ASPECTS[(ASPECTS.indexOf(this.aspect) + 1) % 4];
+            this.aspect = [-this.aspect[1], this.aspect[0]];
         }
     }
     copy() {
@@ -564,7 +553,7 @@ class Piece {
     }
     draw(ctx, x, y, rotation) {
         if (this.aspect) {
-            rotation += ANGLES[this.aspect];
+            rotation += getAngle(this.aspect[0], this.aspect[1]) + Math.PI / 4;
         }
         ctx.translate(x, y);
         ctx.rotate(rotation);
@@ -585,7 +574,14 @@ class Pharaoh extends Piece {
         this.type = 'Pharaoh';
     }
     getActions() {
-        return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
+        return [['m', -1, 0],
+                ['m', -1, 1],
+                ['m', 0, 1],
+                ['m', 1, 1],
+                ['m', 1, 0],
+                ['m', 1, -1],
+                ['m', 0, -1],
+                ['m', -1, -1]];
     }
     drawIcon(ctx) {
         if (this.team == 0) {
@@ -621,7 +617,14 @@ class Obelisk extends Piece {
         this.type = 'Obelisk';
     }
     getActions() {
-        return ['mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
+        return [['m', -1, 0],
+                ['m', -1, 1],
+                ['m', 0, 1],
+                ['m', 1, 1],
+                ['m', 1, 0],
+                ['m', 1, -1],
+                ['m', 0, -1],
+                ['m', -1, -1]];
     }
     drawIcon(ctx) {
         if (this.team == 0) {
@@ -652,7 +655,16 @@ class Pyramid extends Piece {
         this.type = 'Pyramid';
     }
     getActions() {
-        return ['tL', 'tR', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
+        return [['t', 'L'],
+                ['t', 'R'],
+                ['m', -1, 0],
+                ['m', -1, 1],
+                ['m', 0, 1],
+                ['m', 1, 1],
+                ['m', 1, 0],
+                ['m', 1, -1],
+                ['m', 0, -1],
+                ['m', -1, -1]];
     }
     drawIcon(ctx) {
         if (this.team == 0) {
@@ -690,11 +702,16 @@ class Djed extends Piece {
         this.type = 'Djed';
     }
     getActions() {
-        if (this.aspect == 'NE') {
-            return ['tL', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
-        } else if (this.aspect == 'NW') {
-            return ['tR', 'mN', 'mNE', 'mE', 'mSE', 'mS', 'mSW', 'mW', 'mNW'];
-        }
+        return [['t', 'L'],
+                ['t', 'R'],
+                ['m', -1, 0],
+                ['m', -1, 1],
+                ['m', 0, 1],
+                ['m', 1, 1],
+                ['m', 1, 0],
+                ['m', 1, -1],
+                ['m', 0, -1],
+                ['m', -1, -1]];
     }
     drawIcon(ctx) {
         if (this.team == 0) {
