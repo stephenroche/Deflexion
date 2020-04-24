@@ -4,7 +4,7 @@ const WIDTH = 10;
 const HEIGHT = 8;
 const ASPECTS = ['NE', 'SE', 'SW', 'NW'];
 const OPPOSITE = {'N': 'S', 'E': 'W', 'S': 'N', 'W': 'E'};
-const ANGLES = {'NE': 0, 'SE': Math.PI/2, 'SW': Math.PI, 'NW': 3*Math.PI/2};
+const ANGLES = {'NE': 0, 'SE': 0.5 * Math.PI, 'SW': Math.PI, 'NW': 1.5 * Math.PI};
 const GOLD_PIECE = "#FFF000";
 const DARK_GOLD_PIECE = "#BBB000";
 const SILVER_PIECE = "#F0F0F0";
@@ -17,6 +17,15 @@ function startGame() {
 
 var gameArea = {
     canvas : document.getElementById("gameArea"),
+    get hoverSquare() {
+        if (!this.grabbedPiece) {
+            return null;
+        }
+        let [grabbedPieceX, grabbedPieceY] = this.grabbedPiece;
+        let hoverX = grabbedPieceX + Math.round((this.pixelX - this.grabbedPixelX) / 100);
+        let hoverY = grabbedPieceY + Math.round((this.pixelY - this.grabbedPixelY) / 100);
+        return  [hoverX, hoverY];
+    },
     start : function() {
         this.canvas.width = 100 * (WIDTH + 1);
         this.canvas.height = 100 * (HEIGHT + 1);
@@ -27,31 +36,53 @@ var gameArea = {
         this.boardState = new BoardState();
         this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
+
+        this.canvas.addEventListener('mouseover', (e) => {
+            this.pixelX = e.x - this.rect.left;
+            this.pixelY = e.y - this.rect.top;
+        });
+
         this.canvas.addEventListener('mousedown', (e) => {
-            this.x = e.x - this.rect.left;
-            this.y = e.y - this.rect.top;
-            this.clicked = true;
+            // this.clicked = true;
             for (let i = 0; i < this.buttons.length; i++) {
-                if (this.buttons[i].isClicked(this.x, this.y)) {
+                if (this.buttons[i].isClicked(this.pixelX, this.pixelY)) {
                     this.buttons[i].isPressed = true;
                     this.fireLaser(i);
-                    break;
+                    return;
+                }
+            }
+            let [square_x, square_y] = this.pixelToSquare(this.pixelX, this.pixelY);
+            if (this.boardState[square_x][square_y]) {
+                this.grabbedPiece = [square_x, square_y];
+                let centreX = 100 * (square_x + 1);
+                let centreY = 100 * (square_y + 1);
+                let distFromCentre = Math.sqrt((this.pixelX - centreX)**2 + (this.pixelY - centreY)**2);
+                if (20 < distFromCentre && distFromCentre < 40) {
+                    this.fulcrumX = centreX;
+                    this.fulcrumY = centreY;
+                } else {
+                    this.grabbedPixelX = this.pixelX;
+                    this.grabbedPixelY = this.pixelY;
                 }
             }
         });
         this.canvas.addEventListener('mousemove', (e) => {
-            this.x = e.x - this.rect.left;
-            this.y = e.y - this.rect.top;
+            this.pixelX = e.x - this.rect.left;
+            this.pixelY = e.y - this.rect.top;
         });
         this.canvas.addEventListener('mouseup', (e) => {
-            this.x = false;
-            this.y = false;
-            this.clicked = false;
-
             for (var button of this.buttons) {
                 button.isPressed = false;
             }
             this.stopLaser();
+            if (this.grabbedPiece) {
+                this.dropPiece();
+            }
+            // this.clicked = false;
+        });
+        this.canvas.addEventListener('mouseleave', (e) => {
+            this.pixelX = false;
+            this.pixelY = false;
         });
         // this.boardState[1][2] = new Pyramid(0, 'SE');
         // this.boardState[5][3] = new Pyramid(1, 'SW');
@@ -107,10 +138,66 @@ var gameArea = {
         this.drawLaser();
     },
     drawPieces : function() {
-        for (var [pos, piece] of this.boardState) {
-            var [x, y] = pos;
-            var rotation = 0;
-            piece.draw(this.ctx, 100 * (x + 1), 100 * (y + 1), rotation);
+        if (this.grabbedPiece) {
+            var [grabbedPieceX, grabbedPieceY] = this.grabbedPiece;
+        }
+        for (let [pos, piece] of this.boardState) {
+            let [x, y] = pos;
+            if (this.grabbedPiece && x === grabbedPieceX && y === grabbedPieceY) {
+                continue;
+            }
+            piece.draw(this.ctx, 100 * (x + 1), 100 * (y + 1), 0);
+        }
+        if (this.grabbedPiece) {
+            this.drawGlow();
+            let piece = this.boardState[grabbedPieceX][grabbedPieceY];
+            if (this.grabbedPixelX) {
+                var drawX = 100 * (grabbedPieceX + 1) + (this.pixelX - this.grabbedPixelX);
+                var drawY = 100 * (grabbedPieceY + 1) + (this.pixelY - this.grabbedPixelY);
+                var rotation = 0;
+            } else {
+                var drawX = 100 * (grabbedPieceX + 1);
+                var drawY = 100 * (grabbedPieceY + 1);
+                var rotation = Math.atan((this.pixelY - this.fulcrumY) / (this.pixelX - this.fulcrumX));
+            }
+            
+            piece.draw(this.ctx, drawX, drawY, rotation);
+        } else if (this.pixelX) {
+            this.drawSwivel();
+        }
+
+    },
+    drawGlow : function() {
+        let [glowX, glowY] = this.hoverSquare;
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
+        this.ctx.lineWidth = 10;
+        this.ctx.strokeRect(100 * (glowX + 1) - 45, 100 * (glowY + 1) - 45, 90, 90);
+    },
+    drawSwivel : function() {
+        let [x, y] = this.pixelToSquare(this.pixelX, this.pixelY);
+        if (this.boardState[x] && this.boardState[x][y]) {
+            this.ctx.lineWidth = 4;
+            // this.ctx.lineCap = 'round';
+            this.ctx.strokeStyle = "hsla(0, 0%, 40%, 0.7)";
+            let radius = 30;
+            this.ctx.beginPath();
+            this.ctx.arc(100 * (x + 1), 100 * (y + 1), radius, 0, 0.85 * Math.PI);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.arc(100 * (x + 1), 100 * (y + 1), radius, Math.PI, 1.85 * Math.PI);
+            this.ctx.stroke();
+            let headLength = 7;
+            this.ctx.beginPath();
+            this.ctx.moveTo(100 * (x + 1) + radius - headLength, 100 * (y + 1) + headLength);
+            this.ctx.lineTo(100 * (x + 1) + radius, 100 * (y + 1));
+            this.ctx.lineTo(100 * (x + 1) + radius + headLength, 100 * (y + 1) + headLength);
+            this.ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(100 * (x + 1) - radius - headLength, 100 * (y + 1) - headLength);
+            this.ctx.lineTo(100 * (x + 1) - radius, 100 * (y + 1));
+            this.ctx.lineTo(100 * (x + 1) - radius + headLength, 100 * (y + 1) - headLength);
+            this.ctx.stroke();
         }
     },
     fireLaser : function(laser) {
@@ -163,6 +250,35 @@ var gameArea = {
         this.ctx.lineJoin = "bevel";
         this.ctx.stroke();
         this.ctx.lineJoin = "mitre";
+    },
+    pixelToSquare : function(pixelX, pixelY) {
+        let square_x = Math.round(pixelX / 100) - 1;
+        let square_y = Math.round(pixelY / 100) - 1;
+        return [square_x, square_y];
+    },
+    dropPiece : function() {
+        let [oldX, oldY] = this.grabbedPiece;
+        if (this.grabbedPixelX) {
+            let [newX, newY] = this.hoverSquare;
+            if (this.boardState[newX][newY]) {
+                let swapped_piece = this.boardState[newX][newY]
+                this.boardState[newX][newY] = this.boardState[oldX][oldY];
+                this.boardState[oldX][oldY] = swapped_piece;
+            } else {
+                this.boardState[newX][newY] = this.boardState[oldX][oldY];
+                delete this.boardState[oldX][oldY];
+            }
+        } else {
+            // Rotate
+        }
+        
+        
+
+        this.grabbedPiece = false;
+        this.grabbedPixelX = false;
+        this.grabbedPixelY = false;
+        this.fulcrumX = false;
+        this.fulcrumY = false;
     }
 }
 
@@ -175,7 +291,7 @@ function Button(x, y) {
     this.draw = function() {
         var ctx = gameArea.ctx;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         if (this.isPressed) {
             ctx.fillStyle = "#F06060";
         } else {
@@ -183,13 +299,13 @@ function Button(x, y) {
         }
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.strokeStyle = "#707070";
         ctx.lineWidth = 4;
         ctx.stroke();
     }
-    this.isClicked = function(x, y) {
-        var distance = Math.sqrt((x - this.x)**2 + (y - this.y)**2);
+    this.isClicked = function(pixelX, pixelY) {
+        var distance = Math.sqrt((pixelX - this.x)**2 + (pixelY - this.y)**2);
         return (distance <= this.radius);
     }
 }
@@ -588,6 +704,6 @@ class Djed extends Piece {
     }
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+// function sleep(ms) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
