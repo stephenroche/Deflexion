@@ -26,6 +26,15 @@ var gameArea = {
         let hoverY = grabbedPieceY + Math.round((this.pixelY - this.grabbedPixelY) / 100);
         return  [hoverX, hoverY];
     },
+    get turnedAngle() {
+        if (!this.grabbedAngle) {
+            return 0;
+        }
+        let [grabbedPieceX, grabbedPieceY] = this.grabbedPiece;
+        let diffX = this.pixelX - 100 * (grabbedPieceX + 1);
+        let diffY = this.pixelY - 100 * (grabbedPieceY + 1);
+        return getAngle(diffX, diffY) - this.grabbedAngle;
+    },
     start : function() {
         this.canvas.width = 100 * (WIDTH + 1);
         this.canvas.height = 100 * (HEIGHT + 1);
@@ -51,15 +60,14 @@ var gameArea = {
                     return;
                 }
             }
-            let [square_x, square_y] = this.pixelToSquare(this.pixelX, this.pixelY);
-            if (this.boardState[square_x][square_y]) {
-                this.grabbedPiece = [square_x, square_y];
-                let centreX = 100 * (square_x + 1);
-                let centreY = 100 * (square_y + 1);
-                let distFromCentre = Math.sqrt((this.pixelX - centreX)**2 + (this.pixelY - centreY)**2);
+            let [squareX, squareY] = this.pixelToSquare(this.pixelX, this.pixelY);
+            if (this.boardState[squareX][squareY]) {
+                this.grabbedPiece = [squareX, squareY];
+                let diffX = this.pixelX - 100 * (squareX + 1);
+                let diffY = this.pixelY - 100 * (squareY + 1);
+                let distFromCentre = Math.sqrt(diffX**2 + diffY**2);
                 if (20 < distFromCentre && distFromCentre < 40) {
-                    this.fulcrumX = centreX;
-                    this.fulcrumY = centreY;
+                    this.grabbedAngle = getAngle(diffX, diffY);
                 } else {
                     this.grabbedPixelX = this.pixelX;
                     this.grabbedPixelY = this.pixelY;
@@ -84,20 +92,7 @@ var gameArea = {
             this.pixelX = false;
             this.pixelY = false;
         });
-        // this.boardState[1][2] = new Pyramid(0, 'SE');
-        // this.boardState[5][3] = new Pyramid(1, 'SW');
-        // this.boardState[3][3] = new Djed(0, 'NE');
-        // this.boardState[0][0] = new Obelisk(1);
-        // this.boardState[4][7] = new Pharaoh(0);
-        // console.log(this.boardState);
         this.boardState.setStartState();
-        // this.boardState[1][3] = new Obelisk(0);
-        this.boardState[2][4].aspect = 'NE';
-        // console.log(this.boardState.isWinState());
-        // console.log(this.boardState.getLaserPath(0));
-        // console.log(this.boardState.getLaserPath(1));
-        // this.laserPath = this.boardState.getLaserPath(1);
-        // this.fireLaser(1);
     },
     stop : function() {
         clearInterval(this.interval);
@@ -149,16 +144,16 @@ var gameArea = {
             piece.draw(this.ctx, 100 * (x + 1), 100 * (y + 1), 0);
         }
         if (this.grabbedPiece) {
-            this.drawGlow();
             let piece = this.boardState[grabbedPieceX][grabbedPieceY];
-            if (this.grabbedPixelX) {
-                var drawX = 100 * (grabbedPieceX + 1) + (this.pixelX - this.grabbedPixelX);
-                var drawY = 100 * (grabbedPieceY + 1) + (this.pixelY - this.grabbedPixelY);
-                var rotation = 0;
+            let drawX = 100 * (grabbedPieceX + 1);
+            let drawY = 100 * (grabbedPieceY + 1);
+            let rotation = 0;
+            if (this.grabbedAngle) {
+                rotation += this.turnedAngle;
             } else {
-                var drawX = 100 * (grabbedPieceX + 1);
-                var drawY = 100 * (grabbedPieceY + 1);
-                var rotation = Math.atan((this.pixelY - this.fulcrumY) / (this.pixelX - this.fulcrumX));
+                this.drawGlow();
+                drawX += this.pixelX - this.grabbedPixelX;
+                drawY += this.pixelY - this.grabbedPixelY;
             }
             
             piece.draw(this.ctx, drawX, drawY, rotation);
@@ -269,16 +264,17 @@ var gameArea = {
                 delete this.boardState[oldX][oldY];
             }
         } else {
-            // Rotate
+            let turnedAngle = this.turnedAngle;
+            if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
+                this.boardState[oldX][oldY].turn('R');
+            } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
+                this.boardState[oldX][oldY].turn('L');
+            }
         }
-        
-        
-
         this.grabbedPiece = false;
         this.grabbedPixelX = false;
         this.grabbedPixelY = false;
-        this.fulcrumX = false;
-        this.fulcrumY = false;
+        this.grabbedAngle = false;
     }
 }
 
@@ -307,6 +303,15 @@ function Button(x, y) {
     this.isClicked = function(pixelX, pixelY) {
         var distance = Math.sqrt((pixelX - this.x)**2 + (pixelY - this.y)**2);
         return (distance <= this.radius);
+    }
+}
+
+
+function getAngle(x, y) {
+    if (x >= 0) {
+        return Math.atan(y / x);
+    } else {
+        return Math.atan(y / x) + Math.PI;
     }
 }
 
