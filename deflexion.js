@@ -93,6 +93,7 @@ var gameArea = {
             this.pixelY = false;
         });
         this.boardState.setStartState();
+        console.log(this.boardState.getValidMoves());
     },
     stop : function() {
         clearInterval(this.interval);
@@ -391,39 +392,46 @@ class BoardState extends Array {
             return 'Error';
         }
     }
-    // def get_valid_moves(self):
-    //     valid_moves = []
-    //     for piece_pos, piece in self.items():
-    //         if piece.team != self.turn:
-    //             continue
+    getValidMoves() {
+        let valid_moves = [];
+        for (let [piecePos, piece] of this) {
+            if (piece.team != this.turn) {
+                continue;
+            }
 
-    //         for action in piece.get_actions():
-    //             next_x, next_y = piece_pos
+            for (let action of piece.getActions()) {
+                let [nextX, nextY] = piecePos;
 
-    //             if action[0] == 'm':
-    //                 if 'N' in action:
-    //                     next_y += 1
-    //                 elif 'S' in action:
-    //                     next_y -= 1
+                if (action[0] == 'm') {
+                    if (action.includes('N')) {
+                        nextY -= 1;
+                    } else if (action.includes('S')) {
+                        nextY += 1;
+                    }
 
-    //                 if 'E' in action:
-    //                     next_x += 1
-    //                 elif 'W' in action:
-    //                     next_x -= 1
+                    if (action.includes('E')) {
+                        nextX += 1;
+                    } else if (action.includes('W')) {
+                        nextX -= 1;
+                    }
 
-    //                 if (next_x, next_y) in self and not (isinstance(piece, Djed) and isinstance(self[next_x, next_y], (Pyramid, Obelisk)) and (piece_pos[0] != (self.width - 1) * (1 - piece.team))):
-    //                     continue
+                    if (nextX < 0 || nextX >= WIDTH || nextX == (WIDTH - 1) * piece.team) {
+                        continue;
+                    }
 
-    //                 if next_x < 0 or next_x >= self.width or next_x == (self.width - 1) * piece.team:
-    //                     continue
+                    if (nextY < 0 || nextY >= HEIGHT) {
+                        continue;
+                    }
 
-    //                 if next_y < 0 or next_y >= self.height:
-    //                     continue
-
-    //             valid_moves.append( (piece_pos, action) )
-
-    //     return valid_moves
-
+                    if (this[nextX][nextY] && !(piece.type == 'Djed' && ['Pyramid', 'Obelisk'].includes(this[nextX][nextY].type) && (piecePos[0] != (WIDTH - 1) * (1 - piece.team)))) {
+                        continue;
+                    }
+                }
+                valid_moves.push([piecePos, action]);
+            }
+        }
+        return valid_moves;
+    }
     // def make_move(self, move, check_valid=False):
     //     if check_valid and move not in self.get_valid_moves():
     //         print('Board before invalid move:')
