@@ -73,6 +73,9 @@ var gameArea = {
             }
             let [squareX, squareY] = this.pixelToSquare(this.pixelX, this.pixelY);
             if (this.boardState[squareX][squareY]) {
+                if (this.boardState[squareX][squareY].team != this.boardState.turn) {
+                    return;
+                }
                 this.grabbedPiece = [squareX, squareY];
                 let diffX = this.pixelX - 100 * (squareX + 1);
                 let diffY = this.pixelY - 100 * (squareY + 1);
@@ -161,9 +164,10 @@ var gameArea = {
             let drawY = 100 * (grabbedPieceY + 1);
             let rotation = 0;
             if (this.grabbedAngle) {
+                this.drawGlowTurn();
                 rotation += this.turnedAngle;
             } else {
-                this.drawGlow();
+                this.drawGlowMove();
                 drawX += this.pixelX - this.grabbedPixelX;
                 drawY += this.pixelY - this.grabbedPixelY;
             }
@@ -174,23 +178,35 @@ var gameArea = {
         }
 
     },
-    drawGlow : function() {
-        let [glowX, glowY] = this.hoverSquare;
-        // console.log(this.boardState.getValidMoves());
-        // console.log(this.grabbedPieceMove);
-        // console.log(JSON.stringify(this.boardState.getValidMoves()[2]));
-        // console.log(JSON.stringify(this.grabbedPieceMove));
-        if (!this.boardState.getValidMoves().some(m => JSON.stringify(m) === JSON.stringify(this.grabbedPieceMove))) {
-            return;
+    drawGlowMove : function() {
+        for (let [pos, action] of this.boardState.getValidMoves()) {
+            if (JSON.stringify(pos) == JSON.stringify(this.grabbedPiece) && action[0] == 'm') {
+                let [glowX, glowY] = this.grabbedPiece;
+                glowX += action[1];
+                glowY += action[2];
+                this.ctx.beginPath();
+                if (JSON.stringify([glowX, glowY]) == JSON.stringify(this.hoverSquare)){
+                    this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
+                } else {
+                    this.ctx.strokeStyle = 'hsla(120, 100%, 50%, 0.5)';
+                }
+                this.ctx.lineWidth = 10;
+                this.ctx.strokeRect(100 * (glowX + 1) - 45, 100 * (glowY + 1) - 45, 90, 90);
+            }
         }
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
-        this.ctx.lineWidth = 10;
-        this.ctx.strokeRect(100 * (glowX + 1) - 45, 100 * (glowY + 1) - 45, 90, 90);
+    },
+    drawGlowTurn : function() {
+        if (['L', 'R'].includes(this.grabbedPieceMove[1][1])) {
+            let [glowX, glowY] = this.grabbedPiece;
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
+            this.ctx.lineWidth = 10;
+            this.ctx.strokeRect(100 * (glowX + 1) - 45, 100 * (glowY + 1) - 45, 90, 90);
+        }
     },
     drawSwivel : function() {
         let [x, y] = this.pixelToSquare(this.pixelX, this.pixelY);
-        if (this.boardState[x] && this.boardState[x][y] && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
+        if (this.boardState[x] && this.boardState[x][y] && this.boardState[x][y].team == this.boardState.turn && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
             this.ctx.lineWidth = 4;
             // this.ctx.lineCap = 'round';
             this.ctx.strokeStyle = "hsla(0, 0%, 40%, 0.7)";
@@ -266,18 +282,18 @@ var gameArea = {
         this.ctx.lineJoin = "mitre";
     },
     pixelToSquare : function(pixelX, pixelY) {
-        let square_x = Math.round(pixelX / 100) - 1;
-        let square_y = Math.round(pixelY / 100) - 1;
-        return [square_x, square_y];
+        let squareX = Math.round(pixelX / 100) - 1;
+        let squareY = Math.round(pixelY / 100) - 1;
+        return [squareX, squareY];
     },
     dropPiece : function() {
         let [oldX, oldY] = this.grabbedPiece;
         if (this.grabbedPixelX) {
             let [newX, newY] = this.hoverSquare;
             if (this.boardState[newX][newY]) {
-                let swapped_piece = this.boardState[newX][newY]
+                let swappedPiece = this.boardState[newX][newY]
                 this.boardState[newX][newY] = this.boardState[oldX][oldY];
-                this.boardState[oldX][oldY] = swapped_piece;
+                this.boardState[oldX][oldY] = swappedPiece;
             } else {
                 this.boardState[newX][newY] = this.boardState[oldX][oldY];
                 delete this.boardState[oldX][oldY];
@@ -411,7 +427,7 @@ class BoardState extends Array {
         }
     }
     getValidMoves() {
-        let valid_moves = [];
+        let validMoves = [];
         for (let [piecePos, piece] of this) {
             if (piece.team != this.turn) {
                 continue;
@@ -436,70 +452,70 @@ class BoardState extends Array {
                         continue;
                     }
                 }
-                valid_moves.push([piecePos, action]);
+                validMoves.push([piecePos, action]);
             }
         }
-        return valid_moves;
+        return validMoves;
     }
-    // def make_move(self, move, check_valid=False):
-    //     if check_valid and move not in self.get_valid_moves():
-    //         print('Board before invalid move:')
-    //         print(self)
-    //         print('Invalid move: ' + str(move))
-    //         return
+    makeMove(move, checkValid=false) {
+        if (checkValid and move not in self.getValidMoves()):
+            print('Board before invalid move:')
+            print(self)
+            print('Invalid move: ' + str(move))
+            return
 
-    //     piece_pos, action = move
-    //     piece = self[piece_pos]
-    //     if action[0] == 't':
-    //         piece.turn(action[1])
+        piecePos, action = move
+        piece = self[piecePos]
+        if action[0] == 't':
+            piece.turn(action[1])
 
-    //     elif action[0] == 'm':
-    //         next_x, next_y = piece_pos
+        elif action[0] == 'm':
+            nextX, nextY = piecePos
 
-    //         if 'N' in action:
-    //             next_y += 1
-    //         elif 'S' in action:
-    //             next_y -= 1
+            if 'N' in action:
+                nextY += 1
+            elif 'S' in action:
+                nextY -= 1
 
-    //         if 'E' in action:
-    //             next_x += 1
-    //         elif 'W' in action:
-    //             next_x -= 1
+            if 'E' in action:
+                nextX += 1
+            elif 'W' in action:
+                nextX -= 1
 
-    //         swapped_piece = self[(next_x, next_y)] # Can be None
-    //         self[(next_x, next_y)] = piece
-    //         if swapped_piece:
-    //             self[piece_pos] = swapped_piece
-    //         else:
-    //             del self[piece_pos]
+            swappedPiece = self[(nextX, nextY)] # Can be None
+            self[(nextX, nextY)] = piece
+            if swappedPiece:
+                self[piecePos] = swappedPiece
+            else:
+                del self[piecePos]
 
-    //     self.turn = 1 - self.turn
-    //     self.num_turns += 1
-
+        self.turn = 1 - self.turn
+        self.numTurns += 1
+    }
     copy() {
-        var copied_board = new BoardState(this.turn);
+        var copiedBoard = new BoardState(this.turn);
         for (const [[x, y], piece] of this) {
-            copied_board[x][y] = piece.copy();
+            copiedBoard[x][y] = piece.copy();
         }
 
-        return copied_board;
+        return copiedBoard;
     }
 
-    // def get_successor_state(self, move=None, laser=None):
-    //     next_board_state = self.copy()
+    // def getSuccessorState(self, move=None, laser=None):
+    //     nextBoardState = self.copy()
 
     //     if move != None:
-    //         next_board_state.make_move(move)
+    //         nextBoardState.makeMove(move)
 
     //     if laser != None:
-    //         next_board_state.fire_laser(laser)
+    //         nextBoardState.fireLaser(laser)
 
-    //     return next_board_state
+    //     return nextBoardState
 
-    getPath(start_pos, start_direction) {
+    getPath(startPos, startDirection) {
         var path = [];
-        var [x, y] = start_pos;
-        var direction = start_direction;
+        var [x, y] = startPos;
+        var direction = startDirection;
         while (true) {
             path.push([x, y]);
             if (path.length > 1 && (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)) {
@@ -549,11 +565,11 @@ class BoardState extends Array {
             return this.getPath([0, -1], [0, 1]);
         }
     }
-    // def fire_laser(self, laser):
-    //     hit_pos = self.get_laser_path(laser)[-1]
-    //     if hit_pos:
-    //         del self[hit_pos]
-    //     return hit_pos
+    // def fireLaser(self, laser):
+    //     hitPos = self.getLaserPath(laser)[-1]
+    //     if hitPos:
+    //         del self[hitPos]
+    //     return hitPos
 }
 
 
