@@ -1,19 +1,19 @@
-"use strict";
+'use strict';
 
 const WIDTH = 10;
 const HEIGHT = 8;
-const GOLD_PIECE = "#FFF000";
-const DARK_GOLD_PIECE = "#BBB000";
-const SILVER_PIECE = "#F0F0F0";
-const DARK_SILVER_PIECE = "#B0B0B0";
-// const BACKGROUND = "#A0A0A0";
+const GOLD_PIECE = '#FFF000';
+const DARK_GOLD_PIECE = '#BBB000';
+const SILVER_PIECE = '#F0F0F0';
+const DARK_SILVER_PIECE = '#B0B0B0';
+// const BACKGROUND = '#A0A0A0';
 
 function startGame() {              
     gameArea.start();
 }
 
 var gameArea = {
-    canvas : document.getElementById("gameArea"),
+    canvas : document.getElementById('gameArea'),
     get hoverSquare() {
         if (!this.grabbedPiece) {
             return null;
@@ -40,7 +40,7 @@ var gameArea = {
             } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
                 return [this.grabbedPiece, ['t', 'L']];
             } else {
-                return [this.grabbedPiece, ['t', null]];
+                return [this.grabbedPiece, ['t', 'X']];
             }
         } else {
             return [this.grabbedPiece, ['m', this.hoverSquare[0] - this.grabbedPiece[0], this.hoverSquare[1] - this.grabbedPiece[1]]];
@@ -49,7 +49,7 @@ var gameArea = {
     start : function() {
         this.canvas.width = 100 * (WIDTH + 1);
         this.canvas.height = 100 * (HEIGHT + 1);
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext('2d');
         //this.frameNo = 0;
         this.interval = setInterval(this.update.bind(this), 20);
         this.buttons = [new Button(this.canvas.width - 100, this.canvas.height - 25), new Button(100, 25)];
@@ -73,7 +73,7 @@ var gameArea = {
             }
             let [squareX, squareY] = this.pixelToSquare(this.pixelX, this.pixelY);
             if (this.boardState[squareX][squareY]) {
-                if (this.boardState[squareX][squareY].team != this.boardState.turn) {
+                if (this.boardState.moveMade || this.boardState[squareX][squareY].team != this.boardState.turn) {
                     return;
                 }
                 this.grabbedPiece = [squareX, squareY];
@@ -96,7 +96,9 @@ var gameArea = {
             for (var button of this.buttons) {
                 button.isPressed = false;
             }
-            this.stopLaser();
+            if (this.laserInterval) {
+                this.stopLaser();
+            }
             if (this.grabbedPiece) {
                 this.dropPiece();
             }
@@ -116,22 +118,22 @@ var gameArea = {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     },
     drawBackground : function() {
-        this.ctx.fillStyle = "#303030";
+        this.ctx.fillStyle = '#303030';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = "#606060";
+        this.ctx.fillStyle = '#606060';
         this.ctx.fillRect(50, 50, this.canvas.width - 100, this.canvas.height - 100);
 
         for (var i = 0; i < WIDTH; i++) {
             for (var j = 0; j < HEIGHT; j++) {
                 this.ctx.translate(50 + 100 * i, 50 + 100 * j);
-                this.ctx.fillStyle = "#808080";
+                this.ctx.fillStyle = '#808080';
                 this.ctx.fillRect(5, 5, 95, 95);
                 if (i == 0) {
-                    this.ctx.fillStyle = "#F0F0F0";
+                    this.ctx.fillStyle = '#F0F0F0';
                 } else if (i == WIDTH - 1) {
-                    this.ctx.fillStyle = "#F0D070";
+                    this.ctx.fillStyle = '#F0D070';
                 } else{
-                    this.ctx.fillStyle = "#A0A0A0";
+                    this.ctx.fillStyle = '#A0A0A0';
                 }
                 this.ctx.fillRect(5, 5, 90, 90);
                 this.ctx.translate(-(50 + 100 * i), -(50 + 100 * j));
@@ -141,9 +143,11 @@ var gameArea = {
     },
     update : function() {
         this.clear();
+        this.ctx.lineJoin = 'mitre';
         this.drawBackground();
         this.buttons[0].draw();
         this.buttons[1].draw();
+        this.ctx.lineJoin = 'bevel';
         this.drawPieces();
         this.drawLaser();
     },
@@ -206,10 +210,10 @@ var gameArea = {
     },
     drawSwivel : function() {
         let [x, y] = this.pixelToSquare(this.pixelX, this.pixelY);
-        if (this.boardState[x] && this.boardState[x][y] && this.boardState[x][y].team == this.boardState.turn && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
+        if (this.boardState[x] && this.boardState[x][y] && !this.boardState.moveMade && this.boardState[x][y].team == this.boardState.turn && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
             this.ctx.lineWidth = 4;
             // this.ctx.lineCap = 'round';
-            this.ctx.strokeStyle = "hsla(0, 0%, 40%, 0.7)";
+            this.ctx.strokeStyle = 'hsla(0, 0%, 40%, 0.7)';
             let radius = 30;
             this.ctx.beginPath();
             this.ctx.arc(100 * (x + 1), 100 * (y + 1), radius, 0, 0.85 * Math.PI);
@@ -231,38 +235,46 @@ var gameArea = {
         }
     },
     fireLaser : function(laser) {
-        let fullPath = this.boardState.getLaserPath(laser);
-        let len = fullPath.length;
-        let [x1, y1] = fullPath[0];
-        let [x2, y2] = fullPath[1];
-        fullPath[0] = [(x1 + x2) / 2, (y1 + y2) / 2];
-        [x1, y1] = fullPath[len - 3];
-        [x2, y2] = fullPath[len - 2];
-        if (fullPath[len - 1] == 'hit') {
-            this.pieceHit = [...fullPath[len - 2]];
-            fullPath[len - 2] = [0.3 * x1 + 0.7 * x2, 0.3 * y1 + 0.7 * y2];
-        } else {
-            fullPath[len - 2] = [0.5 * x1 + 0.5 * x2, 0.5 * y1 + 0.5 * y2];
-        }
-        fullPath.pop();
-        len--;
-
-        this.laserPath = [];
-        this.laserInterval = setInterval(() => {
-            let drawnLength = this.laserPath.length;
-            if (drawnLength != len) {
-                this.laserPath.push(fullPath[drawnLength]);
+        if (laser !== null) {
+            let fullPath = this.boardState.getLaserPath(laser);
+            let len = fullPath.length;
+            let [x1, y1] = fullPath[0];
+            let [x2, y2] = fullPath[1];
+            fullPath[0] = [(x1 + x2) / 2, (y1 + y2) / 2];
+            [x1, y1] = fullPath[len - 3];
+            [x2, y2] = fullPath[len - 2];
+            if (fullPath[len - 1] == 'hit') {
+                this.pieceHit = [...fullPath[len - 2]];
+                fullPath[len - 2] = [0.3 * x1 + 0.7 * x2, 0.3 * y1 + 0.7 * y2];
+            } else {
+                fullPath[len - 2] = [0.5 * x1 + 0.5 * x2, 0.5 * y1 + 0.5 * y2];
             }
-        }, 50);
+            fullPath.pop();
+            len--;
+
+            this.laserPath = [];
+            this.laserInterval = setInterval(() => {
+                let drawnLength = this.laserPath.length;
+                if (drawnLength != len) {
+                    this.laserPath.push(fullPath[drawnLength]);
+                }
+            }, 50);
+        }
     },
     stopLaser : function() {
         clearInterval(this.laserInterval);
+        delete this.laserInterval;
         this.laserPath = [];
-        if (this.pieceHit) {
-            let [x, y] = this.pieceHit;
-            delete this.boardState[x][y];
-            delete this.pieceHit;
+        if (this.boardState.moveMade) {
+            this.boardState.turn = 1 - this.boardState.turn;
+            this.boardState.numTurns += 1;
+            this.boardState.moveMade = false;
+            if (this.pieceHit) {
+                let [x, y] = this.pieceHit;
+                delete this.boardState[x][y];
+            }
         }
+        delete this.pieceHit;
     },
     drawLaser : function() {
         if (!this.laserPath.length) {
@@ -277,9 +289,7 @@ var gameArea = {
         // this.ctx.strokeStyle = 'rgba(1,0,0,0.4)'; // rgba printing black for some reason
         this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.5)';
         this.ctx.lineWidth = 10;
-        this.ctx.lineJoin = "bevel";
         this.ctx.stroke();
-        this.ctx.lineJoin = "mitre";
     },
     pixelToSquare : function(pixelX, pixelY) {
         let squareX = Math.round(pixelX / 100) - 1;
@@ -287,25 +297,26 @@ var gameArea = {
         return [squareX, squareY];
     },
     dropPiece : function() {
-        let [oldX, oldY] = this.grabbedPiece;
-        if (this.grabbedPixelX) {
-            let [newX, newY] = this.hoverSquare;
-            if (this.boardState[newX][newY]) {
-                let swappedPiece = this.boardState[newX][newY]
-                this.boardState[newX][newY] = this.boardState[oldX][oldY];
-                this.boardState[oldX][oldY] = swappedPiece;
-            } else {
-                this.boardState[newX][newY] = this.boardState[oldX][oldY];
-                delete this.boardState[oldX][oldY];
-            }
-        } else {
-            let turnedAngle = this.turnedAngle;
-            if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
-                this.boardState[oldX][oldY].turn('R');
-            } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
-                this.boardState[oldX][oldY].turn('L');
-            }
-        }
+        // let [oldX, oldY] = this.grabbedPiece;
+        // if (this.grabbedPixelX) {
+        //     let [newX, newY] = this.hoverSquare;
+        //     if (this.boardState[newX][newY]) {
+        //         let swappedPiece = this.boardState[newX][newY]
+        //         this.boardState[newX][newY] = this.boardState[oldX][oldY];
+        //         this.boardState[oldX][oldY] = swappedPiece;
+        //     } else {
+        //         this.boardState[newX][newY] = this.boardState[oldX][oldY];
+        //         delete this.boardState[oldX][oldY];
+        //     }
+        // } else {
+        //     let turnedAngle = this.turnedAngle;
+        //     if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
+        //         this.boardState[oldX][oldY].turn('R');
+        //     } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
+        //         this.boardState[oldX][oldY].turn('L');
+        //     }
+        // }
+        this.boardState.makeMove(this.grabbedPieceMove);
         this.grabbedPiece = false;
         this.grabbedPixelX = false;
         this.grabbedPixelY = false;
@@ -324,14 +335,14 @@ function Button(x, y) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         if (this.isPressed) {
-            ctx.fillStyle = "#F06060";
+            ctx.fillStyle = '#F06060';
         } else {
-            ctx.fillStyle = "#F00000";
+            ctx.fillStyle = '#F00000';
         }
         ctx.fill();
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#707070";
+        ctx.strokeStyle = '#707070';
         ctx.lineWidth = 4;
         ctx.stroke();
     }
@@ -457,40 +468,27 @@ class BoardState extends Array {
         }
         return validMoves;
     }
-    makeMove(move, checkValid=false) {
-        if (checkValid and move not in self.getValidMoves()):
-            print('Board before invalid move:')
-            print(self)
-            print('Invalid move: ' + str(move))
-            return
-
-        piecePos, action = move
-        piece = self[piecePos]
-        if action[0] == 't':
-            piece.turn(action[1])
-
-        elif action[0] == 'm':
-            nextX, nextY = piecePos
-
-            if 'N' in action:
-                nextY += 1
-            elif 'S' in action:
-                nextY -= 1
-
-            if 'E' in action:
-                nextX += 1
-            elif 'W' in action:
-                nextX -= 1
-
-            swappedPiece = self[(nextX, nextY)] # Can be None
-            self[(nextX, nextY)] = piece
-            if swappedPiece:
-                self[piecePos] = swappedPiece
-            else:
-                del self[piecePos]
-
-        self.turn = 1 - self.turn
-        self.numTurns += 1
+    makeMove(move) {
+        if (this.moveMade || !this.getValidMoves().some(m => JSON.stringify(m) == JSON.stringify(move))) {
+            // alert('Invalid move: ' + move);
+            return;
+        }
+        let [[oldX, oldY], action] = move;
+        if (action[0] == 't') {
+            this[oldX][oldY].turn(action[1]);
+        } else if (action[0] == 'm') {
+            let newX = oldX + action[1];
+            let newY = oldY + action[2];
+            if (this[newX][newY]) {
+                let swappedPiece = this[newX][newY]
+                this[newX][newY] = this[oldX][oldY];
+                this[oldX][oldY] = swappedPiece;
+            } else {
+                this[newX][newY] = this[oldX][oldY];
+                delete this[oldX][oldY];
+            }
+        }
+        this.moveMade = true;
     }
     copy() {
         var copiedBoard = new BoardState(this.turn);
@@ -599,7 +597,7 @@ class Piece {
         ctx.translate(-x, -y);
     }
     drawIcon(ctx) {
-        ctx.fillStyle = "#FF0000";
+        ctx.fillStyle = '#FF0000';
         ctx.fillRect(-49, -49, 98, 98);
     }
 }
@@ -711,14 +709,13 @@ class Pyramid extends Piece {
             var light = SILVER_PIECE;
             var dark = DARK_SILVER_PIECE;
         }
-
         ctx.fillStyle = dark;
         ctx.fillRect(-49, -49, 98, 98);
 
         ctx.beginPath();
-        ctx.moveTo(-49, -49);
-        ctx.lineTo(49, 49);
-        ctx.lineTo(-49, 49);
+        ctx.moveTo(-45, -45);
+        ctx.lineTo(45, 45);
+        ctx.lineTo(-45, 45);
         ctx.closePath();
         ctx.fillStyle = light;
         ctx.fill();
