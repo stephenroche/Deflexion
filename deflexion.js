@@ -63,7 +63,6 @@ var gameArea = {
         });
 
         this.canvas.addEventListener('mousedown', (e) => {
-            // this.clicked = true;
             for (let i = 0; i < this.buttons.length; i++) {
                 if (this.buttons[i].isClicked(this.pixelX, this.pixelY)) {
                     this.buttons[i].isPressed = true;
@@ -102,11 +101,10 @@ var gameArea = {
             if (this.grabbedPiece) {
                 this.dropPiece();
             }
-            // this.clicked = false;
         });
         this.canvas.addEventListener('mouseleave', (e) => {
-            this.pixelX = false;
-            this.pixelY = false;
+            delete this.pixelX;
+            delete this.pixelY;
         });
         this.boardState.setStartState();
         console.log(this.boardState.getValidMoves());
@@ -297,30 +295,11 @@ var gameArea = {
         return [squareX, squareY];
     },
     dropPiece : function() {
-        // let [oldX, oldY] = this.grabbedPiece;
-        // if (this.grabbedPixelX) {
-        //     let [newX, newY] = this.hoverSquare;
-        //     if (this.boardState[newX][newY]) {
-        //         let swappedPiece = this.boardState[newX][newY]
-        //         this.boardState[newX][newY] = this.boardState[oldX][oldY];
-        //         this.boardState[oldX][oldY] = swappedPiece;
-        //     } else {
-        //         this.boardState[newX][newY] = this.boardState[oldX][oldY];
-        //         delete this.boardState[oldX][oldY];
-        //     }
-        // } else {
-        //     let turnedAngle = this.turnedAngle;
-        //     if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
-        //         this.boardState[oldX][oldY].turn('R');
-        //     } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
-        //         this.boardState[oldX][oldY].turn('L');
-        //     }
-        // }
         this.boardState.makeMove(this.grabbedPieceMove);
-        this.grabbedPiece = false;
-        this.grabbedPixelX = false;
-        this.grabbedPixelY = false;
-        this.grabbedAngle = false;
+        delete this.grabbedPiece;
+        delete this.grabbedPixelX;
+        delete this.grabbedPixelY;
+        delete this.grabbedAngle;
     }
 }
 
@@ -368,6 +347,7 @@ class BoardState extends Array {
         this.clear()
         this.turn = turn;
         this.numTurns = 0;
+        this.moveMade = false;
     }
     [Symbol.iterator]() {
         let index = 0;
