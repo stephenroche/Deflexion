@@ -34,10 +34,10 @@ var gameArea = {
     },
     get grabbedPieceMove() {
         if (this.grabbedAngle) {
-            let turnedAngle = this.turnedAngle;
+            let turnedAngle = (this.turnedAngle + 2 * Math.PI) % (2 * Math.PI);
             if (0.25 * Math.PI < turnedAngle && turnedAngle < 0.75 * Math.PI) {
                 return [this.grabbedPiece, ['t', 'R']];
-            } else if (-0.75 * Math.PI < turnedAngle && turnedAngle < -0.25 * Math.PI) {
+            } else if (1.25 * Math.PI < turnedAngle && turnedAngle < 1.75 * Math.PI) {
                 return [this.grabbedPiece, ['t', 'L']];
             } else {
                 return [this.grabbedPiece, ['t', 'X']];
@@ -54,8 +54,13 @@ var gameArea = {
         this.interval = setInterval(this.update.bind(this), 20);
         this.buttons = [new Button(this.canvas.width - 100, this.canvas.height - 25), new Button(100, 25)];
         this.boardState = new BoardState();
+        this.boardState.setStartState();
+        console.log(this.boardState.getValidMoves());
         this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
+        this.opposition = new RandomAgent();
+        this.boardHistory = [this.boardState.copy()];
+        this.turnDisplayed = 0;
 
         this.canvas.addEventListener('mouseover', (e) => {
             this.pixelX = e.x - this.rect.left;
@@ -69,6 +74,9 @@ var gameArea = {
                     this.fireLaser(i);
                     return;
                 }
+            }
+            if (this.isWinState) {
+                return;
             }
             let [squareX, squareY] = this.pixelToSquare(this.pixelX, this.pixelY);
             if (this.boardState[squareX][squareY]) {
@@ -106,8 +114,6 @@ var gameArea = {
             delete this.pixelX;
             delete this.pixelY;
         });
-        this.boardState.setStartState();
-        console.log(this.boardState.getValidMoves());
     },
     stop : function() {
         clearInterval(this.interval);
@@ -148,16 +154,19 @@ var gameArea = {
         this.ctx.lineJoin = 'bevel';
         this.drawPieces();
         this.drawLaser();
+        this.drawGameOver();
     },
     drawPieces : function() {
         if (this.grabbedPiece) {
             var [grabbedPieceX, grabbedPieceY] = this.grabbedPiece;
         }
+        // console.log(this.boardState);
         for (let [pos, piece] of this.boardState) {
             let [x, y] = pos;
             if (this.grabbedPiece && x === grabbedPieceX && y === grabbedPieceY) {
                 continue;
             }
+            // console.log(piece);
             piece.draw(this.ctx, 100 * (x + 1), 100 * (y + 1), 0);
         }
         if (this.grabbedPiece) {
@@ -265,11 +274,19 @@ var gameArea = {
         this.laserPath = [];
         if (this.boardState.moveMade) {
             this.boardState.turn = 1 - this.boardState.turn;
-            this.boardState.numTurns += 1;
+            // this.boardState.numTurns += 1;
             this.boardState.moveMade = false;
             if (this.pieceHit) {
                 let [x, y] = this.pieceHit;
                 delete this.boardState[x][y];
+            }
+            this.turnDisplayed++;
+            this.boardHistory = this.boardHistory.slice(0, this.turnDisplayed);
+            this.boardHistory.push(this.boardState.copy());
+            console.log(this.boardHistory);
+            this.isWinState = this.boardState.isWinState();
+            if (this.boardState.turn == 1 && this.opposition && !this.isWinState) {
+                this.makeOppositionMove();
             }
         }
         delete this.pieceHit;
@@ -300,6 +317,41 @@ var gameArea = {
         delete this.grabbedPixelX;
         delete this.grabbedPixelY;
         delete this.grabbedAngle;
+    },
+    makeOppositionMove : async function() {
+        this.update();
+        await sleep(500);
+        let [move, laser] = this.opposition.getAction(this.boardState);
+        this.boardState.makeMove(move);
+        if (laser !== null) {
+            await sleep(1000);
+            this.fireLaser(laser);
+            await sleep(2000);
+        }
+        this.stopLaser();
+    },
+    undo : function() {
+        if (this.turnDisplayed > 0) {
+            this.turnDisplayed--;
+            this.boardState = this.boardHistory[this.turnDisplayed].copy();
+            console.log(this.boardHistory);
+            this.isWinState = false;
+        }
+    },
+    redo : function() {
+        if (this.turnDisplayed < this.boardHistory.length - 1) {
+            this.turnDisplayed++;
+            this.boardState = this.boardHistory[this.turnDisplayed].copy();
+            console.log(this.boardHistory);
+            this.isWinState = this.boardState.isWinState();
+        }
+    },
+    drawGameOver : function() {
+        if (this.isWinState) {
+            this.ctx.fillStyle = 'hsla(0, 100%, 50%, 0.7)';
+            this.ctx.font = "150px Arial";
+            this.ctx.fillText(this.isWinState, 50, 500);
+        }
     }
 }
 
@@ -346,7 +398,7 @@ class BoardState extends Array {
         super();
         this.clear()
         this.turn = turn;
-        this.numTurns = 0;
+        // this.numTurns = 0;
         this.moveMade = false;
     }
     [Symbol.iterator]() {
@@ -396,7 +448,7 @@ class BoardState extends Array {
         }
 
         this.turn = 0;
-        this.numTurns = 0;
+        // this.numTurns = 0;
     }
     isWinState() {
         var pharaohsFound = [false, false];
@@ -409,9 +461,9 @@ class BoardState extends Array {
         if (pharaohsFound[0] && pharaohsFound[1]) {
             return false;
         } else if (pharaohsFound[0]) {
-            return 'Win_0';
+            return ' GOLD WINS! ';
         } else if (pharaohsFound[1]) {
-            return 'Win_1';
+            return 'SILVER WINS!';
         } else {
             alert('Error: no pharaohs');
             return 'Error';
@@ -564,7 +616,7 @@ class Piece {
         }
     }
     copy() {
-        return { ...this };
+        return new this.constructor(this.team, this.aspect);
     }
     draw(ctx, x, y, rotation) {
         if (this.aspect) {
@@ -748,6 +800,11 @@ class Djed extends Piece {
     }
 }
 
-// function sleep(ms) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function randomChoice(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+

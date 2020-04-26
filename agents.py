@@ -9,13 +9,13 @@ from os import path
 
 class Agent():
 	"""docstring for Agent"""
-	def get_action(self, board_state, team=0):
+	def get_action(self, board_state):
 		util.raiseNotDefined()
 	
 
 class KeyboardAgent(Agent):
 	"""docstring for KeyBoardAgent"""
-	def get_action(self, board_state, team=0):
+	def get_action(self, board_state):
 		x, y = input('Enter position: ').split()
 		position = (int(x), int(y))
 		action = input('Enter action: ')
@@ -28,7 +28,7 @@ class KeyboardAgent(Agent):
 
 class RandomAgent(Agent):
 	"""docstring for LearningAgent"""
-	def get_action(self, board_state, team=0):
+	def get_action(self, board_state):
 		moves = board_state.get_valid_moves()
 		move = random.choice(moves)
 		laser = 0 if random.random() < 0.5 else 1
