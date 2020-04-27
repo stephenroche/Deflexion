@@ -147,7 +147,7 @@ var gameArea = {
     },
     update : function() {
         this.clear();
-        this.ctx.lineJoin = 'mitre';
+        this.ctx.lineJoin = 'miter';
         this.drawBackground();
         this.buttons[0].draw();
         this.buttons[1].draw();
@@ -380,15 +380,6 @@ function Button(x, y) {
     this.isClicked = function(pixelX, pixelY) {
         var distance = Math.sqrt((pixelX - this.x)**2 + (pixelY - this.y)**2);
         return (distance <= this.radius);
-    }
-}
-
-
-function getAngle(x, y) {
-    if (x >= 0) {
-        return Math.atan(y / x);
-    } else {
-        return Math.atan(y / x) + Math.PI;
     }
 }
 
@@ -798,13 +789,5 @@ class Djed extends Piece {
         ctx.lineWidth = 8;
         ctx.stroke();
     }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function randomChoice(array) {
-    return array[Math.floor(Math.random() * array.length)];
 }
 
