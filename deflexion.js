@@ -56,6 +56,8 @@ var gameArea = {
         this.boardState = new BoardState();
         this.boardState.setStartState();
         console.log(this.boardState.getValidMoves());
+        this.extractor = new DeflexionExtractor();
+        // console.log(extractor.getFeatures(this.boardState));
         this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
         this.opposition = new RandomAgent();
@@ -217,7 +219,7 @@ var gameArea = {
     },
     drawSwivel : function() {
         let [x, y] = this.pixelToSquare(this.pixelX, this.pixelY);
-        if (this.boardState[x] && this.boardState[x][y] && !this.boardState.moveMade && this.boardState[x][y].team == this.boardState.turn && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
+        if (this.boardState.contains(x, y) && !this.boardState.moveMade && this.boardState[x][y].team == this.boardState.turn && ['Pyramid', 'Djed'].includes(this.boardState[x][y].type)) {
             this.ctx.lineWidth = 4;
             // this.ctx.lineCap = 'round';
             this.ctx.strokeStyle = 'hsla(0, 0%, 40%, 0.7)';
@@ -248,16 +250,19 @@ var gameArea = {
             let [x1, y1] = fullPath[0];
             let [x2, y2] = fullPath[1];
             fullPath[0] = [(x1 + x2) / 2, (y1 + y2) / 2];
-            [x1, y1] = fullPath[len - 3];
-            [x2, y2] = fullPath[len - 2];
-            if (fullPath[len - 1] == 'hit') {
-                this.pieceHit = [...fullPath[len - 2]];
-                fullPath[len - 2] = [0.3 * x1 + 0.7 * x2, 0.3 * y1 + 0.7 * y2];
+            // [x1, y1] = fullPath[len - 3];
+            // [x2, y2] = fullPath[len - 2];
+            // if (fullPath[len - 1] == 'hit') {
+            [x1, y1] = fullPath[len - 2];
+            [x2, y2] = fullPath[len - 1];
+            if (this.boardState.contains(x2, y2)) {
+                this.pieceHit = [...fullPath[len - 1]];
+                fullPath[len - 1] = [0.3 * x1 + 0.7 * x2, 0.3 * y1 + 0.7 * y2];
             } else {
-                fullPath[len - 2] = [0.5 * x1 + 0.5 * x2, 0.5 * y1 + 0.5 * y2];
+                fullPath[len - 1] = [0.5 * x1 + 0.5 * x2, 0.5 * y1 + 0.5 * y2];
             }
-            fullPath.pop();
-            len--;
+            // fullPath.pop();
+            // len--;
 
             this.laserPath = [];
             this.laserInterval = setInterval(() => {
@@ -284,6 +289,7 @@ var gameArea = {
             this.boardHistory = this.boardHistory.slice(0, this.turnDisplayed);
             this.boardHistory.push(this.boardState.copy());
             console.log(this.boardHistory);
+            console.log(this.extractor.getFeatures(this.boardState));
             this.isWinState = this.boardState.isWinState();
             if (this.boardState.turn == 1 && this.opposition && !this.isWinState) {
                 this.makeOppositionMove();
@@ -521,6 +527,9 @@ class BoardState extends Array {
 
         return copiedBoard;
     }
+    contains(x, y) {
+        return (this[x] && this[x][y]);
+    }
 
     // def getSuccessorState(self, move=None, laser=None):
     //     nextBoardState = self.copy()
@@ -540,7 +549,7 @@ class BoardState extends Array {
         while (true) {
             path.push([x, y]);
             if (path.length > 1 && (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)) {
-                path.push('safe');
+                // path.push('safe');
                 break;
             }
 
@@ -548,11 +557,11 @@ class BoardState extends Array {
                 var piece = this[x][y];
 
                 if (['Pharaoh', 'Obelisk'].includes(piece.type)) {
-                    path.push('hit');
+                    // path.push('hit');
                     break;
                 } else if (piece.type == 'Pyramid') {
                     if (piece.aspect[0] * direction[0] + piece.aspect[1] * direction[1] == 1) {
-                        path.push('hit');
+                        // path.push('hit');
                         break;
                     } else {
                         if (direction[0]) {

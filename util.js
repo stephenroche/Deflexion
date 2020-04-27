@@ -33,3 +33,8 @@ class Counter {
 		return product;
 	}
 }
+
+
+function manhattanDistance(xy1, xy2) {
+    return Math.abs(xy1[0] - xy2[0]) + Math.abs(xy1[1] - xy2[1]);
+}
