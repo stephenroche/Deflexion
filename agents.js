@@ -53,10 +53,10 @@ class MCSTAgent {
 		}
 	}
 
-	getAction(boardState, certainty=null, maxSimulations=100) {
-		startTime = Date.now();
+	getAction(boardState, certainty=null, maxSimulations=10000) {
+		let startTime = Date.now();
 		let team = boardState.turn;
-		let root = newMCSTNode(team, null, null, boardState);
+		let root = new MCSTNode(team, null, null, boardState);
 		root.timesVisited = 1;
 		root.averageValue = this.getValue(boardState);
 		let simulations = 0;
@@ -67,7 +67,7 @@ class MCSTAgent {
 			simulations += 1;
 			// Traverse
 			let current = root;
-			console.log('root', end='')
+			// console.log('root')
 			while (!current.isLeaf()) {
 				// current = max(current.children, key=lambda child: child.UCB())
 				let bestUCB = -1;
@@ -83,22 +83,21 @@ class MCSTAgent {
 				}
 				current = bestChild;
 
-				console.log(' ->', current.action, end='')
+				// console.log(' ->', current.action)
 			}
 			if (current.timesVisited != 0 && !current.boardState.isWinState()) {
 				// Add children
-				current.makeChildren(this.getValue);
+				current.makeChildren(this.getValue.bind(this));
 				current = current.children[0];
-				console.log(' ->', current.action, end='')
+				// console.log(' ->', current.action)
 			}
 			if (!current.isRoot() && !current.addBoardState()) {
 				let index = current.parent.children.indexOf(current);
-				delete current.parent.children[index];
-				console.log(': duplicate - cancelled')
+				current.parent.children.splice(index, 1);
+				// console.log(': duplicate - cancelled')
 				duplicates += 1;
 				continue;
 			}
-			console.log()
 
 			// Evaluate leaf
 			let value = this.getValue(current.boardState);
@@ -106,8 +105,8 @@ class MCSTAgent {
 			// Ignore suicides
 			if (value == (current.teamToMove == 0 ? 1 : -1)) {
 				let index = current.parent.children.indexOf(current);
-				delete current.parent.children[index];
-				// console.log(': this kill - cancelled')
+				current.parent.children.splice(index, 1);
+				// console.log(': self kill - cancelled')
 				continue;
 			}
 			// Backpropagate
@@ -139,7 +138,7 @@ class MCSTAgent {
 		let bestNode = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
 		let diff = (this.discount * bestNode.averageValue) - this.getValue(boardState);
 		let features = this.featExtractor.getFeatures(boardState);
-		for (let [key, activation] of features.entries()) {
+		for (let [key, activation] of Object.entries(features)) {
 			this.weights[key] += this.alpha * diff * activation;
 		}
 
@@ -150,37 +149,37 @@ class MCSTAgent {
 		// 	print('Save failed');
 
 
-		console.log('${simulations} simulations in ${(Date.now() - startTime) / 1000} seconds');
-		console.log(finishedSimulations + 'finishedSimulations');
-		console.log(duplicates + 'duplicates');
+		console.log(simulations + ' simulations in ' + (Date.now() - startTime) / 1000 + ' seconds');
+		console.log(finishedSimulations + ' finishedSimulations');
+		console.log(duplicates + ' duplicates');
 		// console.log('${root.children.length} children, avg ${finishedSimulations // len(root.children)} visitations');
 
 		let mvc = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
 		console.log('most visited child:');
-		console.log('  timesVisited =' + mvc.timesVisited);
-		console.log('  action =' + mvc.action);
-		console.log('  value =' + mvc.averageValue);
-		console.log('  teamToMove =' + mvc.teamToMove);
+		console.log('  timesVisited = ' + mvc.timesVisited);
+		console.log('  action = ' + mvc.action);
+		console.log('  value = ' + mvc.averageValue);
+		console.log('  teamToMove = ' + mvc.teamToMove);
 
-		if (mvc.children) {
+		if (mvc.children.length > 0) {
 			let mvg = mvc.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
 			console.log('most visited grandchild:');
-			console.log('  timesVisited =' + mvg.timesVisited);
-			console.log('  action =' + mvg.action);
-			console.log('  value =' + mvg.averageValue);
-			console.log('  teamToMove =' + mvg.teamToMove);
-			console.log('  UCB =' + mvg.UCB);
+			console.log('  timesVisited = ' + mvg.timesVisited);
+			console.log('  action = ' + mvg.action);
+			console.log('  value = ' + mvg.averageValue);
+			console.log('  teamToMove = ' + mvg.teamToMove);
+			console.log('  UCB = ' + mvg.UCB);
 		}
-		if (chosenNode.children) {
+		if (chosenNode.children.length > 0) {
 			let wg = chosenNode.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
-			console.log('worse grandchild under chosen (%d visits):' % chosenNode.timesVisited);
-			console.log('  timesVisited =' + wg.timesVisited);
-			console.log('  action =' + wg.action);
-			console.log('  value =' + wg.averageValue);
-			console.log('  teamToMove =' + wg.teamToMove);
-			console.log('  UCB =' + wg.UCB);
+			console.log('worse grandchild under chosen (' + chosenNode.timesVisited + ' visits):');
+			console.log('  timesVisited = ' + wg.timesVisited);
+			console.log('  action = ' + wg.action);
+			console.log('  value = ' + wg.averageValue);
+			console.log('  teamToMove = ' + wg.teamToMove);
+			console.log('  UCB = ' + wg.UCB);
 		}
-		console.log('value chosen =' + chosenNode.averageValue);
+		console.log('value chosen = ' + chosenNode.averageValue);
 
 		return chosenNode.action;
 	}

@@ -60,39 +60,43 @@ class MCSTNode {
         return (this.children.length == 0);
     }
     makeChildren(valueFunction) {
-        if (!this.isRoot() && this.parent.opponentActionValues == null) {
-            this.parent.setOpponentActionValues(valueFunction);
-        }
+    	let actions = [];
+    	if (!this.isRoot()) {
+    		if (this.parent.opponentActionValues == null) {
+	            this.parent.setOpponentActionValues(valueFunction);
+	        }
+	        let sortValues = {};
+	        for (let move of this.boardState.getValidMoves()) {
+	            for (let laser of [null, 0, 1]) {
+	                actions.push([move, laser]);
 
-        let actions = [];
-        let sortValues = {};
-        for (move of this.boardState.getValidMoves()) {
-            for (laser of [null, 0, 1]) {
-                actions.append([move, laser]);
+			       	if ([move, laser] in this.parent.opponentActionValues) {
+			            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, laser] ];
+			        } else if ([move, null] in this.parent.opponentActionValues) {
+			            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, null] ];
+			        } else {
+			            sortValues[ [move, laser] ] = this.parent.averageValue;
+			        }
+			    }
+	        }
 
-		       	if ([move, laser] in this.parent.opponentActionValues) {
-		            sortValues[ [move, laser] ] = this.parent.opponentActionValues[action];
-		        } else if ([move, null] in this.parent.opponentActionValues) {
-		            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, null] ];
-		        } else {
-		            sortValues[ [move, laser] ] = this.parent.averageValue;
-		        }
-		    }
-        }
+	        let compareFunction = function(action1, action2) {
+	            return sortValues[action1] - sortValues[action2];
+	        }
 
-        compareFunction = function(action1, action2) {
-            return sortValues[action1] - sortValues[action2];
-        }
-
-        if (!this.isRoot()) {
-        	actions.sort(compareFunction);
+	        actions.sort(compareFunction);
         	if (this.teamToMove == 0) {
         		actions.reverse();
         	}
-            // actions.sort(key=orderActions, reverse=(true if this.teamToMove == 0 else false));
+    	} else {
+    		for (let move of this.boardState.getValidMoves()) {
+	            for (let laser of [null, 0, 1]) {
+	                actions.push([move, laser]);
+			    }
+	        }
     	}
-
-        for (action of actions) {
+		
+		for (let action of actions) {
             this.children.push(new MCSTNode(1 - this.teamToMove, this, action));
         }
     }
@@ -112,7 +116,7 @@ class MCSTNode {
         let [move, laser] = this.action;
         this.boardState = this.parent.boardState.getSuccessorState(move);
 
-        if (laser == null || this.boardState.fireLaser(laser) != false) {
+        if (this.boardState.fireLaser(laser) != false || laser == null) {
             return true;
         }
 
@@ -124,7 +128,7 @@ class MCSTNode {
         boardStateReverseTurns.turn = 1 - boardStateReverseTurns.turn;
         for (let move of boardStateReverseTurns.getValidMoves()) {
             let nextBoardStatePreLaser = boardStateReverseTurns.getSuccessorState(move, false);
-            for (laser of [null, 0, 1]) {
+            for (let laser of [null, 0, 1]) {
                 if (laser === null) {
                     var nextBoardState = nextBoardStatePreLaser;
                 } else {

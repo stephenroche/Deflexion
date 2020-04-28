@@ -51,15 +51,20 @@ var gameArea = {
         this.canvas.height = 100 * (HEIGHT + 1);
         this.ctx = this.canvas.getContext('2d');
         //this.frameNo = 0;
-        this.interval = setInterval(this.update.bind(this), 20);
+        this.interval = setInterval(this.update.bind(this), 50);
         this.buttons = [new Button(this.canvas.width - 100, this.canvas.height - 25), new Button(100, 25)];
         this.boardState = new BoardState();
+
         this.boardState.setStartState();
-        console.log(this.boardState.getValidMoves());
-        this.agent = new MCSTAgent;
+        // this.boardState[1][7] = new Pharaoh(0);
+        // this.boardState[8][5] = new Pharaoh(1);
+        // // this.boardState[9][6] = new Pyramid(0, [-1, 1]);
+        // this.boardState[9][5] = new Pyramid(0, [-1, 1]);
+
+        // console.log(this.boardState.getValidMoves());
         this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
-        this.opposition = new RandomAgent();
+        this.opposition = new MCSTAgent();
         this.boardHistory = [this.boardState.copy()];
         this.turnDisplayed = 0;
 
@@ -287,9 +292,7 @@ var gameArea = {
             this.turnDisplayed++;
             this.boardHistory = this.boardHistory.slice(0, this.turnDisplayed);
             this.boardHistory.push(this.boardState.copy());
-            console.log(this.boardHistory);
-            console.log(this.agent.getValue(this.boardState));
-            console.log(this.agent.featExtractor.getFeatures(this.boardState));
+            // console.log(this.boardHistory);
             this.isWinState = this.boardState.isWinState();
             if (this.boardState.turn == 1 && this.opposition && !this.isWinState) {
                 this.makeOppositionMove();
@@ -327,7 +330,7 @@ var gameArea = {
     makeOppositionMove : async function() {
         this.update();
         await sleep(500);
-        let [move, laser] = this.opposition.getAction(this.boardState);
+        let [move, laser] = this.opposition.getAction(this.boardState.copy());
         this.boardState.makeMove(move);
         if (laser !== null) {
             await sleep(1000);
@@ -340,7 +343,7 @@ var gameArea = {
         if (this.turnDisplayed > 0) {
             this.turnDisplayed--;
             this.boardState = this.boardHistory[this.turnDisplayed].copy();
-            console.log(this.boardHistory);
+            // console.log(this.boardHistory);
             this.isWinState = false;
         }
     },
@@ -348,7 +351,7 @@ var gameArea = {
         if (this.turnDisplayed < this.boardHistory.length - 1) {
             this.turnDisplayed++;
             this.boardState = this.boardHistory[this.turnDisplayed].copy();
-            console.log(this.boardHistory);
+            // console.log(this.boardHistory);
             this.isWinState = this.boardState.isWinState();
         }
     },
@@ -521,7 +524,7 @@ class BoardState extends Array {
         this.moveMade = true;
     }
     copy() {
-        var copiedBoard = new BoardState(this.turn);
+        let copiedBoard = new BoardState(this.turn);
         for (const [[x, y], piece] of this) {
             copiedBoard[x][y] = piece.copy();
         }
@@ -596,6 +599,7 @@ class BoardState extends Array {
     }
     fireLaser(laser) {
         this.moveMade = false;
+        this.turn = 1 - this.turn;
         if (laser === null) {
             return false;
         }
