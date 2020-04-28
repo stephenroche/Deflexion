@@ -38,3 +38,106 @@ class Counter {
 function manhattanDistance(xy1, xy2) {
     return Math.abs(xy1[0] - xy2[0]) + Math.abs(xy1[1] - xy2[1]);
 }
+
+
+class MCSTNode {
+    constructor(teamToMove, parent=null, action=null, boardState=null) {
+        this.teamToMove = teamToMove;
+        this.parent = parent;
+        this.children = [];
+        this.action = action;
+        this.boardState = boardState;
+        this.timesVisited = 0;
+        this.totalScore = 0;
+        this.averageValue = null;
+        this.UCB = 1;
+        this.opponentActionValues = null;
+    }
+    isRoot() {
+        return (this.parent == null);
+    }
+    isLeaf() {
+        return (this.children.length == 0);
+    }
+    makeChildren(valueFunction) {
+        if (!this.isRoot() && this.parent.opponentActionValues == null) {
+            this.parent.setOpponentActionValues(valueFunction);
+        }
+
+        let actions = [];
+        let sortValues = {};
+        for (move of this.boardState.getValidMoves()) {
+            for (laser of [null, 0, 1]) {
+                actions.append([move, laser]);
+
+		       	if ([move, laser] in this.parent.opponentActionValues) {
+		            sortValues[ [move, laser] ] = this.parent.opponentActionValues[action];
+		        } else if ([move, null] in this.parent.opponentActionValues) {
+		            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, null] ];
+		        } else {
+		            sortValues[ [move, laser] ] = this.parent.averageValue;
+		        }
+		    }
+        }
+
+        compareFunction = function(action1, action2) {
+            return sortValues[action1] - sortValues[action2];
+        }
+
+        if (!this.isRoot()) {
+        	actions.sort(compareFunction);
+        	if (this.teamToMove == 0) {
+        		actions.reverse();
+        	}
+            // actions.sort(key=orderActions, reverse=(true if this.teamToMove == 0 else false));
+    	}
+
+        for (action of actions) {
+            this.children.push(new MCSTNode(1 - this.teamToMove, this, action));
+        }
+    }
+    update(value) {
+        this.timesVisited += 1;
+        this.totalScore += value;
+        this.averageValue = this.totalScore / this.timesVisited;
+
+        let teamToggle = (this.teamToMove == 1 ? 1 : -1);
+        this.UCB = teamToggle * this.averageValue + 1 / Math.sqrt(this.timesVisited + 1) * (1 - teamToggle * this.averageValue);
+        // print('timesVisited:', this.timesVisited)
+        // print('totalScore:', this.totalScore)
+        // print('averageValue:', this.averageValue)
+        // print('UCB set to', this.UCB)
+    }
+    addBoardState() {
+        let [move, laser] = this.action;
+        this.boardState = this.parent.boardState.getSuccessorState(move);
+
+        if (laser == null || this.boardState.fireLaser(laser) != false) {
+            return true;
+        }
+
+        return false;
+    }
+    setOpponentActionValues(valueFunction) {
+        this.opponentActionValues = {};
+        let boardStateReverseTurns = this.boardState.copy();
+        boardStateReverseTurns.turn = 1 - boardStateReverseTurns.turn;
+        for (let move of boardStateReverseTurns.getValidMoves()) {
+            let nextBoardStatePreLaser = boardStateReverseTurns.getSuccessorState(move, false);
+            for (laser of [null, 0, 1]) {
+                if (laser === null) {
+                    var nextBoardState = nextBoardStatePreLaser;
+                } else {
+                	let path = nextBoardStatePreLaser.getLaserPath(laser);
+                	let [endX, endY] = path[path.length - 1];
+                	if (nextBoardStatePreLaser.contains(endX, endY)) {
+                    	var nextBoardState = nextBoardStatePreLaser.getSuccessorState(false, laser);
+	                } else {
+	                    continue;
+	                }
+	            }
+                this.opponentActionValues[ [move, laser] ] = valueFunction(nextBoardState);
+            }
+        }
+    }
+}

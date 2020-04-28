@@ -8,162 +8,180 @@ class RandomAgent {
 }
 
 
+let savedWeights = new Counter();
+savedWeights['Pyramids diff'] =	0.092308;
+savedWeights['Defensive Pyramids'] = -0.042472;
+savedWeights['Offensive Pyramids'] = 0.066060;
+savedWeights['Reflectors on gold minus silver'] = 0.086882;
+savedWeights['Defensive Djeds'] = 0.021674;
+savedWeights['Offensive Djeds'] = 0.185774;
+savedWeights['Laser control'] = 0.067372;
+savedWeights['Laser near Pharaoh'] = -0.101078;
+savedWeights['Spaces from Pharaoh'] = -0.166780;
+savedWeights['Pyramids threatened'] = -0.022083;
+savedWeights['Pharaohs threatened'] = -0.343031;
+savedWeights['Teammates linking Pharaoh'] = 0.025879;
+savedWeights['Teammates blocking Pharaoh'] = 0.108466;
+savedWeights['Enemies linking Pharaoh'] = -0.086675;
+savedWeights['Enemies blocking Pharaoh'] = -0.065223;
+
 
 class MCSTAgent {
-	constructor(featExtractor=DeflexionExtractor(), discount=1, alpha=0.01, loadWeights=false)) {
-		this.featExtractor = featExtractor
-		this.discount = discount
-		this.alpha = alpha
-		if loadWeights and path.isfile('./weights.p'):
-			this.weights = pickle.load(open("weights.p", "rb"))
-			print('Loaded weights from weights.p...')
-		else:
-			this.weights = Counter()
+	constructor(featExtractor=new DeflexionExtractor(), discount=1, alpha=0.00, loadWeights=true) {
+		this.featExtractor = featExtractor;
+		this.discount = discount;
+		this.alpha = alpha;
+		if (loadWeights) {
+			this.weights = savedWeights;
+		} else {
+			this.weights = Counter();
+		}
 	}
-	def getValue(this, boardState):
-		result = boardState.isWinState()
-		if result == 'Win_0':
-			return 1
-		elif result == 'Win_1':
-			return -1
-		else:
-			value = this.weights * this.featExtractor.getFeatures(boardState)
-			return sorted([-0.9, value, 0.9])[1]
+	getValue(boardState) {
+		let result = boardState.isWinState();
+		if (result == 'GOLD WINS!') {
+			return 1;
+		} else if (result == 'SILVER WINS!') {
+			return -1;
+		} else {
+			let value = this.weights.dot(this.featExtractor.getFeatures(boardState));
+			if (Math.abs(value) > 0.9) {
+				return (value > 0 ? 0.9 : -0.9);
+			} else {
+				return value;
+			}
+		}
+	}
 
-	getAction(this, boardState, certainty=None, maxSimulations=100000):
-		# this.weights.pop('Obelisks diff', None)
-		# this.weights['Pharaohs threatened'] = -0.5
+	getAction(boardState, certainty=null, maxSimulations=100) {
+		startTime = Date.now();
+		let team = boardState.turn;
+		let root = newMCSTNode(team, null, null, boardState);
+		root.timesVisited = 1;
+		root.averageValue = this.getValue(boardState);
+		let simulations = 0;
+		let finishedSimulations = 0;
+		let duplicates = 0;
+		// while time.time() - startTime < 10:
+		while (simulations < maxSimulations) {
+			simulations += 1;
+			// Traverse
+			let current = root;
+			console.log('root', end='')
+			while (!current.isLeaf()) {
+				// current = max(current.children, key=lambda child: child.UCB())
+				let bestUCB = -1;
+				for (let child of current.children) {
+					if (child.UCB > bestUCB) {
+						var bestChild = child;
+						if (child.UCB >= 1) {
+							break;
+						} else {
+							bestUCB = child.UCB;
+						}
+					}
+				}
+				current = bestChild;
 
-		startTime = time.time()
-		team = boardState.turn
-		root = MCSTNode(team, boardState=boardState)
-		root.timesVisited = 1
-		root.averageValue = this.getValue(boardState)
-		simulations = 0
-		finishedSimulations = 0
-		duplicates = 0
-		try:
-			# while time.time() - startTime < 10:
-			while simulations < maxSimulations:
-				simulations += 1
-				# Traverse
-				current = root
-				# print('root', end='')
-				while not current.isLeaf():
-					# current = max(current.children, key=lambda child: child.UCB())
-					bestUCB = -1
-					for child in current.children:
-						if child.UCB > bestUCB:
-							bestChild = child
-							if child.UCB >= 1:
-								break
-							else:
-								bestUCB = child.UCB
-					current = bestChild
+				console.log(' ->', current.action, end='')
+			}
+			if (current.timesVisited != 0 && !current.boardState.isWinState()) {
+				// Add children
+				current.makeChildren(this.getValue);
+				current = current.children[0];
+				console.log(' ->', current.action, end='')
+			}
+			if (!current.isRoot() && !current.addBoardState()) {
+				let index = current.parent.children.indexOf(current);
+				delete current.parent.children[index];
+				console.log(': duplicate - cancelled')
+				duplicates += 1;
+				continue;
+			}
+			console.log()
 
-					# print(' ->', current.action, end='')
+			// Evaluate leaf
+			let value = this.getValue(current.boardState);
 
-				if current.timesVisited != 0 and not current.boardState.isWinState():
-					# Add children
-					current.makeChildren(valueFunction=this.getValue)
-					current = current.children[0]
-					# print(' ->', current.action, end='')
+			// Ignore suicides
+			if (value == (current.teamToMove == 0 ? 1 : -1)) {
+				let index = current.parent.children.indexOf(current);
+				delete current.parent.children[index];
+				// console.log(': this kill - cancelled')
+				continue;
+			}
+			// Backpropagate
+			// while current != null:
+			while (!current.isRoot()) {
+				current.update(value);
+				current = current.parent;
+			}
+			finishedSimulations += 1;
+		}
 
-				if not current.isRoot() and not current.addBoardState():
-					current.parent.children.remove(current)
-					# print(': duplicate - cancelled')
-					duplicates += 1
-					continue
-
-				# print()
-
-				# Evaluate leaf
-				value = this.getValue(current.boardState)
-
-				# Ignore suicides
-				if value == (1 if current.teamToMove == 0 else -1):
-					current.parent.children.remove(current)
-					# print(': this kill - cancelled')
-					continue
-
-				# Backpropagate
-				# while current != None:
-				while not current.isRoot():
-					current.update(value)
-					current = current.parent
-
-				finishedSimulations += 1
-
-		except KeyboardInterrupt:
-			pass
-
-		if certainty == None:
-			chosenNode = max(root.children, key=lambda child: child.timesVisited)
-
-		else:
-			teamToggle = 1 if team == 0 else -1
-			probs = Counter()
-			for child in root.children:
-				if child.timesVisited == 0:
-					continue
-				value = child.averageValue
-				probs[child] = 10**(teamToggle * certainty * value)
-			chosenNode = probs.sample()
-
-
-
-		# Update weights
-		bestNode = max(root.children, key=lambda child: child.timesVisited)
-		diff = (this.discount * bestNode.averageValue) - this.getValue(boardState)
-		features = this.featExtractor.getFeatures(boardState)
-		for key, activation in features.items():
-			this.weights[key] += this.alpha * diff * activation
-
-		print('Saving weights.p...')
-		try:
-			pickle.dump(this.weights, open("weights.p", "wb"))
-		except:
-			print('Save failed')
+		if (certainty === null) {
+			var chosenNode = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b)
+		} else {
+			let teamToggle = (team == 0 ? 1 : -1);
+			let probs = new Counter();
+			for (let child of root.children) {
+				if (child.timesVisited == 0) {
+					continue;
+				}
+				let value = child.averageValue;
+				probs[child] = 10**(teamToggle * certainty * value);
+			}
+			var chosenNode = probs.sample();
+		}
 
 
-		print('%d simulations in %.3f seconds' % (simulations, time.time() - startTime))
-		print(finishedSimulations, 'finishedSimulations')
-		print(duplicates, 'duplicates')
-		print('%d children, avg %d visitations' % (len(root.children), finishedSimulations // len(root.children)))
+		// Update weights
+		let bestNode = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
+		let diff = (this.discount * bestNode.averageValue) - this.getValue(boardState);
+		let features = this.featExtractor.getFeatures(boardState);
+		for (let [key, activation] of features.entries()) {
+			this.weights[key] += this.alpha * diff * activation;
+		}
 
-		mvc = max(root.children, key=lambda c: c.timesVisited)
-		print('most visited child:')
-		print('  timesVisited =', mvc.timesVisited)
-		print('  action =', mvc.action)
-		print('  value =', mvc.averageValue)
-		print('  teamToMove =', mvc.teamToMove)
+		// print('Saving weights.p...');
+		// try:
+		// 	pickle.dump(this.weights, open("weights.p", "wb"));
+		// except:
+		// 	print('Save failed');
 
-		if mvc.children:
-			mvg = max(mvc.children, key=lambda c: c.timesVisited)
-			print('most visited grandchild:')
-			print('  timesVisited =', mvg.timesVisited)
-			print('  action =', mvg.action)
-			print('  value =', mvg.averageValue)
-			print('  teamToMove =', mvg.teamToMove)
-			print('  UCB =', mvg.UCB)
 
-			# hvg = max(mvc.children, key=lambda c: -teamToggle * c.totalScore / c.timesVisited)
-			# print('highest value grandchild:')
-			# print('  timesVisited =', hvg.timesVisited)
-			# print('  action =', hvg.action)
-			# print('  value =', hvg.totalScore / hvg.timesVisited)
-			# print('  teamToMove =', hvg.teamToMove)
+		console.log('${simulations} simulations in ${(Date.now() - startTime) / 1000} seconds');
+		console.log(finishedSimulations + 'finishedSimulations');
+		console.log(duplicates + 'duplicates');
+		// console.log('${root.children.length} children, avg ${finishedSimulations // len(root.children)} visitations');
 
-		if chosenNode.children:
-			wg = max(chosenNode.children, key=lambda c: c.timesVisited)
-			print('worse grandchild under chosen (%d visits):' % chosenNode.timesVisited)
-			print('  timesVisited =', wg.timesVisited)
-			print('  action =', wg.action)
-			print('  value =', wg.averageValue)
-			print('  teamToMove =', wg.teamToMove)
-			print('  UCB =', wg.UCB)
+		let mvc = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
+		console.log('most visited child:');
+		console.log('  timesVisited =' + mvc.timesVisited);
+		console.log('  action =' + mvc.action);
+		console.log('  value =' + mvc.averageValue);
+		console.log('  teamToMove =' + mvc.teamToMove);
 
-		print('value chosen =', chosenNode.averageValue)
+		if (mvc.children) {
+			let mvg = mvc.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
+			console.log('most visited grandchild:');
+			console.log('  timesVisited =' + mvg.timesVisited);
+			console.log('  action =' + mvg.action);
+			console.log('  value =' + mvg.averageValue);
+			console.log('  teamToMove =' + mvg.teamToMove);
+			console.log('  UCB =' + mvg.UCB);
+		}
+		if (chosenNode.children) {
+			let wg = chosenNode.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
+			console.log('worse grandchild under chosen (%d visits):' % chosenNode.timesVisited);
+			console.log('  timesVisited =' + wg.timesVisited);
+			console.log('  action =' + wg.action);
+			console.log('  value =' + wg.averageValue);
+			console.log('  teamToMove =' + wg.teamToMove);
+			console.log('  UCB =' + wg.UCB);
+		}
+		console.log('value chosen =' + chosenNode.averageValue);
 
-		return chosenNode.action}
+		return chosenNode.action;
+	}
 }

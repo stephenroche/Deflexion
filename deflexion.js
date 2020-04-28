@@ -56,8 +56,7 @@ var gameArea = {
         this.boardState = new BoardState();
         this.boardState.setStartState();
         console.log(this.boardState.getValidMoves());
-        this.extractor = new DeflexionExtractor();
-        // console.log(extractor.getFeatures(this.boardState));
+        this.agent = new MCSTAgent;
         this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
         this.opposition = new RandomAgent();
@@ -289,7 +288,8 @@ var gameArea = {
             this.boardHistory = this.boardHistory.slice(0, this.turnDisplayed);
             this.boardHistory.push(this.boardState.copy());
             console.log(this.boardHistory);
-            console.log(this.extractor.getFeatures(this.boardState));
+            console.log(this.agent.getValue(this.boardState));
+            console.log(this.agent.featExtractor.getFeatures(this.boardState));
             this.isWinState = this.boardState.isWinState();
             if (this.boardState.turn == 1 && this.opposition && !this.isWinState) {
                 this.makeOppositionMove();
@@ -356,7 +356,8 @@ var gameArea = {
         if (this.isWinState) {
             this.ctx.fillStyle = 'hsla(0, 100%, 50%, 0.7)';
             this.ctx.font = "150px Arial";
-            this.ctx.fillText(this.isWinState, 50, 500);
+            this.ctx.textAlign = "center";
+            this.ctx.fillText(this.isWinState, 550, 500);
         }
     }
 }
@@ -458,7 +459,7 @@ class BoardState extends Array {
         if (pharaohsFound[0] && pharaohsFound[1]) {
             return false;
         } else if (pharaohsFound[0]) {
-            return ' GOLD WINS! ';
+            return 'GOLD WINS!';
         } else if (pharaohsFound[1]) {
             return 'SILVER WINS!';
         } else {
@@ -530,18 +531,16 @@ class BoardState extends Array {
     contains(x, y) {
         return (this[x] && this[x][y]);
     }
-
-    // def getSuccessorState(self, move=None, laser=None):
-    //     nextBoardState = self.copy()
-
-    //     if move != None:
-    //         nextBoardState.makeMove(move)
-
-    //     if laser != None:
-    //         nextBoardState.fireLaser(laser)
-
-    //     return nextBoardState
-
+    getSuccessorState(move=false, laser=false) {
+        let nextBoardState = this.copy();
+        if (move !== false) {
+            nextBoardState.makeMove(move);
+        }
+        if (laser !== false) {
+            nextBoardState.fireLaser(laser);
+        }
+        return nextBoardState;
+    }
     getPath(startPos, startDirection) {
         var path = [];
         var [x, y] = startPos;
@@ -595,11 +594,20 @@ class BoardState extends Array {
             return this.getPath([0, -1], [0, 1]);
         }
     }
-    // def fireLaser(self, laser):
-    //     hitPos = self.getLaserPath(laser)[-1]
-    //     if hitPos:
-    //         del self[hitPos]
-    //     return hitPos
+    fireLaser(laser) {
+        this.moveMade = false;
+        if (laser === null) {
+            return false;
+        }
+        let path = this.getLaserPath(laser);
+        let [endX, endY] = path[path.length - 1];
+        if (this.contains(endX, endY)) {
+            delete this[endX][endY];
+            return [endX, endY];
+        } else {
+            return false;
+        }
+    }
 }
 
 
