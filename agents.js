@@ -27,7 +27,7 @@ savedWeights['Enemies blocking Pharaoh'] = -0.065223;
 
 
 class MCSTAgent {
-	constructor(featExtractor=new DeflexionExtractor(), discount=1, alpha=0.00, loadWeights=true) {
+	constructor(featExtractor=new DeflexionExtractor(), discount=1, alpha=0.01, loadWeights=true) {
 		this.featExtractor = featExtractor;
 		this.discount = discount;
 		this.alpha = alpha;

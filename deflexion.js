@@ -340,7 +340,9 @@ var gameArea = {
         this.stopLaser();
     },
     undo : function() {
-        if (this.turnDisplayed > 0) {
+        if (this.boardState.moveMade) {
+            this.boardState = this.boardHistory[this.turnDisplayed].copy();
+        } else if (this.turnDisplayed > 0) {
             this.turnDisplayed--;
             this.boardState = this.boardHistory[this.turnDisplayed].copy();
             // console.log(this.boardHistory);
