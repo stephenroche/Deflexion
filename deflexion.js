@@ -504,10 +504,12 @@ class BoardState extends Array {
         return validMoves;
     }
     makeMove(move) {
-        if (this.moveMade || !this.getValidMoves().some(m => JSON.stringify(m) == JSON.stringify(move))) {
+        if (this.moveMade || !this.containsMove(this.getValidMoves(), move)) {
             // alert('Invalid move: ' + move);
             return;
         }
+
+
         let [[oldX, oldY], action] = move;
         if (action[0] == 't') {
             this[oldX][oldY].turn(action[1]);
@@ -524,6 +526,15 @@ class BoardState extends Array {
             }
         }
         this.moveMade = true;
+    }
+    containsMove(array, move) {
+        let [[x1, y1], action1] = move;
+        for (let [[x2, y2], action2] of array) {
+            if (x1 === x2 && y1 === y2 && action1[1] === action2[1] && (action1[0] === 't' || action1[2] === action2[2])) {
+                return true;
+            }
+        }
+        return false;
     }
     copy() {
         let copiedBoard = new BoardState(this.turn);
