@@ -82,8 +82,8 @@ class MCSTNode {
 			        mapped.push( {index: index, value: value} );
 			    }
 	        }
-
-	        mapped.sort((a, b) => (a - b));
+            
+	        mapped.sort((a, b) => (a.value - b.value));
 			actions = mapped.map(el => actions[el.index]);
         	if (this.teamToMove == 0) {
         		actions.reverse();
