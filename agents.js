@@ -53,7 +53,7 @@ class MCSTAgent {
 		}
 	}
 
-	getAction(boardState, certainty=null, maxSimulations=10000) {
+	getAction(boardState, certainty=null, maxSimulations=20000) {
 		let startTime = Date.now();
 		let team = boardState.turn;
 		let root = new MCSTNode(team, null, null, boardState);

@@ -61,30 +61,30 @@ class MCSTNode {
     }
     makeChildren(valueFunction) {
     	let actions = [];
+    	let mapped = [];
     	if (!this.isRoot()) {
     		if (this.parent.opponentActionValues == null) {
 	            this.parent.setOpponentActionValues(valueFunction);
 	        }
-	        let sortValues = {};
 	        for (let move of this.boardState.getValidMoves()) {
 	            for (let laser of [null, 0, 1]) {
+	            	let index = actions.length;
+	            	let value;
 	                actions.push([move, laser]);
 
 			       	if ([move, laser] in this.parent.opponentActionValues) {
-			            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, laser] ];
+			            value = this.parent.opponentActionValues[ [move, laser] ];
 			        } else if ([move, null] in this.parent.opponentActionValues) {
-			            sortValues[ [move, laser] ] = this.parent.opponentActionValues[ [move, null] ];
+			            value = this.parent.opponentActionValues[ [move, null] ];
 			        } else {
-			            sortValues[ [move, laser] ] = this.parent.averageValue;
+			            value = this.parent.averageValue;
 			        }
+			        mapped.push( {index: index, value: value} );
 			    }
 	        }
 
-	        let compareFunction = function(action1, action2) {
-	            return sortValues[action1] - sortValues[action2];
-	        }
-
-	        actions.sort(compareFunction);
+	        mapped.sort((a, b) => (a - b));
+			actions = mapped.map(el => actions[el.index]);
         	if (this.teamToMove == 0) {
         		actions.reverse();
         	}
