@@ -2,8 +2,7 @@
 
 const WIDTH = 10;
 const HEIGHT = 8;
-// const GOLD_PIECE = '#FFF000';
-const GOLD_PIECE = '#00FFF0';
+const GOLD_PIECE = '#FFF000';
 const DARK_GOLD_PIECE = '#BBB000';
 const SILVER_PIECE = '#F0F0F0';
 const DARK_SILVER_PIECE = '#B0B0B0';
