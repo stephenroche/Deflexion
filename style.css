@@ -1,4 +1,15 @@
+body {
+	margin: 0;
+}
+
 canvas {
-    border:1px solid #ff0000;
     background-color: #aaaaaa;
+}
+
+.header {
+	background-color: lightblue;
+	/*margin: 0px;*/
+	/*overflow: hidden;*/
+	text-align: center;
+	font-size: 60px;
 }

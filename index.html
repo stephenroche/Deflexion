@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<!--<meta name="viewport" content="width=device-width, initial-scale=1.0"/>-->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"/> -->
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body onload="startGame()">
 
-<h1>Deflexion</h1>
+<div class="header">
+	Deflexion
+</div>
 
 <canvas id="gameArea"></canvas>
 
 <div style="text-align:center;width:480px;">
-  <button onclick="gameArea.stopLaser()">No laser</button>
-  <button onclick="gameArea.undo()">Undo</button>
-  <button onclick="gameArea.redo()">Redo</button>
+	<button onclick="gameArea.stopLaser()">End Turn Without Laser</button>
+	<button onclick="gameArea.undo()">Undo</button>
+	<button onclick="gameArea.redo()">Redo</button>
 </div>
 
 <script src="util.js"></script>
