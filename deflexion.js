@@ -13,7 +13,7 @@ function startGame() {
 }
 
 var gameArea = {
-    canvas : document.getElementById('gameArea'),
+    canvas : document.getElementById('board-area'),
     get hoverSquare() {
         if (!this.grabbedPiece) {
             return null;

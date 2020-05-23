@@ -11,13 +11,44 @@
 	Deflexion
 </div>
 
-<canvas id="gameArea"></canvas>
+<div class="column left">
+	<canvas id="board-area"></canvas>
+	<button class="end-turn" onclick="gameArea.stopLaser()">End Turn Without Laser</button>
+</div>
 
-<div style="text-align:center;width:480px;">
-	<button onclick="gameArea.stopLaser()">End Turn Without Laser</button>
+<div class="column right">
+	<div class="column-inner">
+		<button class="undo-redo" onclick="gameArea.undo()">Undo</button>
+		<button class="undo-redo" onclick="gameArea.redo()">Redo</button>
+		<br>
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam facilisis ligula nisi, eget finibus sem dapibus non. Etiam ullamcorper nec mi et ornare. Suspendisse nec mauris sed ligula bibendum sodales quis consequat metus. Duis interdum tellus sapien, at iaculis ante viverra vel. Integer placerat ipsum ut feugiat egestas. Suspendisse ornare dui fermentum, egestas erat sed, sollicitudin orci. Vestibulum lacus risus, consectetur interdum est pellentesque, gravida suscipit arcu. Etiam non libero auctor, pellentesque turpis sed, facilisis urna. In id venenatis purus, sed volutpat erat. Suspendisse dui orci, maximus vitae aliquet nec, viverra quis arcu.
+
+		Nulla velit mi, tincidunt eget mattis quis, maximus ac nibh. In at ipsum eros. Aliquam at vehicula sapien, viverra auctor nisi. Duis tristique eros nisl, a luctus tortor gravida a. Nunc pulvinar dolor et sem ullamcorper, lacinia dignissim tortor pellentesque. Fusce magna nulla, tristique vel turpis et, placerat luctus lacus. Etiam ut urna eros. Nullam tincidunt vehicula est a pretium. Phasellus feugiat vel orci nec malesuada.
+
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin pulvinar libero sit amet iaculis laoreet. Vivamus molestie, sem nec sodales ultricies, arcu ipsum finibus felis, sed semper mi nisi in neque. Morbi facilisis gravida justo, sit amet vestibulum tortor aliquet at. Sed iaculis ex vitae ligula tristique eleifend. Maecenas egestas faucibus arcu, eget pharetra enim pulvinar sed. Nam vitae orci at elit elementum scelerisque. Praesent vel erat ullamcorper, consectetur dui a, varius neque. Ut sollicitudin magna mi, sed dictum diam commodo nec. Aenean eget sagittis dolor. Aenean turpis risus, interdum non leo nec, molestie pulvinar nulla.
+
+		Mauris nec arcu orci. Cras egestas odio a justo euismod, vitae consequat lacus accumsan. Donec sit amet vehicula libero. In et venenatis turpis. Nulla commodo tortor eu semper fermentum. Suspendisse velit tortor, tempus ac lacus ut, convallis euismod metus. Pellentesque et luctus velit. Quisque leo urna, vestibulum sed ornare a, rhoncus in purus. Nulla iaculis diam quis turpis accumsan, quis gravida quam euismod. Etiam nec massa ultricies lacus molestie lacinia a molestie sapien. Cras mauris nulla, tempus eget libero ut, finibus dictum dolor. Interdum et malesuada fames ac ante ipsum primis in faucibus.
+
+		Nullam tristique est ut ultrices lobortis. Nunc at lorem vitae dui iaculis aliquet non rhoncus leo. Sed eu diam at sem laoreet varius. Donec lacinia, velit vitae tempus vulputate, nisi leo iaculis neque, nec eleifend mi est vitae magna. In tempus luctus metus, vitae pharetra diam iaculis ut. Nullam velit lorem, molestie id justo sollicitudin, placerat viverra libero. Ut blandit semper augue non dictum. Aliquam sollicitudin dolor a tellus maximus auctor. Phasellus varius venenatis augue quis sodales. Nunc lobortis interdum velit, viverra dictum urna pretium et. Quisque vel lobortis felis, in placerat risus. Vestibulum ut rhoncus justo. Cras enim arcu, finibus non lorem non, vehicula euismod magna. Cras et vestibulum dui.
+
+		Nulla velit mi, tincidunt eget mattis quis, maximus ac nibh. In at ipsum eros. Aliquam at vehicula sapien, viverra auctor nisi. Duis tristique eros nisl, a luctus tortor gravida a. Nunc pulvinar dolor et sem ullamcorper, lacinia dignissim tortor pellentesque. Fusce magna nulla, tristique vel turpis et, placerat luctus lacus. Etiam ut urna eros. Nullam tincidunt vehicula est a pretium. Phasellus feugiat vel orci nec malesuada.
+
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin pulvinar libero sit amet iaculis laoreet. Vivamus molestie, sem nec sodales ultricies, arcu ipsum finibus felis, sed semper mi nisi in neque. Morbi facilisis gravida justo, sit amet vestibulum tortor aliquet at. Sed iaculis ex vitae ligula tristique eleifend. Maecenas egestas faucibus arcu, eget pharetra enim pulvinar sed. Nam vitae orci at elit elementum scelerisque. Praesent vel erat ullamcorper, consectetur dui a, varius neque. Ut sollicitudin magna mi, sed dictum diam commodo nec. Aenean eget sagittis dolor. Aenean turpis risus, interdum non leo nec, molestie pulvinar nulla.
+
+		Mauris nec arcu orci. Cras egestas odio a justo euismod, vitae consequat lacus accumsan. Donec sit amet vehicula libero. In et venenatis turpis. Nulla commodo tortor eu semper fermentum. Suspendisse velit tortor, tempus ac lacus ut, convallis euismod metus. Pellentesque et luctus velit. Quisque leo urna, vestibulum sed ornare a, rhoncus in purus. Nulla iaculis diam quis turpis accumsan, quis gravida quam euismod. Etiam nec massa ultricies lacus molestie lacinia a molestie sapien. Cras mauris nulla, tempus eget libero ut, finibus dictum dolor. Interdum et malesuada fames ac ante ipsum primis in faucibus.
+
+		Nullam tristique est ut ultrices lobortis. Nunc at lorem vitae dui iaculis aliquet non rhoncus leo. Sed eu diam at sem laoreet varius. Donec lacinia, velit vitae tempus vulputate, nisi leo iaculis neque, nec eleifend mi est vitae magna. In tempus luctus metus, vitae pharetra diam iaculis ut. Nullam velit lorem, molestie id justo sollicitudin, placerat viverra libero. Ut blandit semper augue non dictum. Aliquam sollicitudin dolor a tellus maximus auctor. Phasellus varius venenatis augue quis sodales. Nunc lobortis interdum velit, viverra dictum urna pretium et. Quisque vel lobortis felis, in placerat risus. Vestibulum ut rhoncus justo. Cras enim arcu, finibus non lorem non, vehicula euismod magna. Cras et vestibulum dui.
+	</div>
+	
+	
+</div>
+
+
+
+<!-- <div style="text-align:center;width:480px;">
 	<button onclick="gameArea.undo()">Undo</button>
 	<button onclick="gameArea.redo()">Redo</button>
-</div>
+</div> -->
 
 <script src="util.js"></script>
 <script src="deflexion.js"></script>
