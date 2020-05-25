@@ -362,10 +362,10 @@ var gameArea = {
         this.isWinState = this.boardState.isWinState();
         if (this.isWinState) {
             document.getElementById("end-turn").style.display = "none";
-            document.getElementById("replay").style.display = "block";
+            document.getElementById("new-game").style.display = "block";
         } else {
             document.getElementById("end-turn").style.display = "block";
-            document.getElementById("replay").style.display = "none";
+            document.getElementById("new-game").style.display = "none";
         }
     }
 }
