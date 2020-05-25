@@ -154,6 +154,7 @@ var gameArea = {
         this.drawPieces();
         this.drawLaser();
         this.drawGameOver();
+        this.drawThinking();
     },
     drawPieces : function() {
         if (this.grabbedPiece) {
@@ -323,7 +324,11 @@ var gameArea = {
     makeOppositionMove : async function() {
         this.update();
         await sleep(500);
+        this.thinking = true;
+        await sleep(100);
         let [move, laser] = this.opposition.getAction(this.boardState.copy());
+        this.thinking = false;
+        await sleep(200);
         this.boardState.makeMove(move);
         if (laser !== null) {
             await sleep(1000);
@@ -353,19 +358,28 @@ var gameArea = {
     drawGameOver : function() {
         if (this.isWinState) {
             this.ctx.fillStyle = 'hsla(0, 100%, 50%, 0.7)';
-            this.ctx.font = "150px Arial";
-            this.ctx.textAlign = "center";
+            this.ctx.font = '150px Arial';
+            this.ctx.textAlign = 'center';
             this.ctx.fillText(this.isWinState, 550, 500);
         }
     },
     updateWinState: function() {
         this.isWinState = this.boardState.isWinState();
         if (this.isWinState) {
-            document.getElementById("end-turn").style.display = "none";
-            document.getElementById("new-game").style.display = "block";
+            document.getElementById('end-turn').style.display = 'none';
+            document.getElementById('new-game').style.display = 'block';
         } else {
-            document.getElementById("end-turn").style.display = "block";
-            document.getElementById("new-game").style.display = "none";
+            document.getElementById('end-turn').style.display = 'block';
+            document.getElementById('new-game').style.display = 'none';
+        }
+    },
+    drawThinking: function() {
+        if (this.thinking) {
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = 'hsla(0, 100%, 50%, 0.7)';
+            this.ctx.lineWidth = 30;
+            this.ctx.strokeRect(15, 15, 1070, 870);
+            this.ctx.stroke();
         }
     }
 }
@@ -828,10 +842,11 @@ class Djed extends Piece {
 }
 
 
-let slider = document.getElementById("difficulty-slider");
-let output = document.getElementById("difficulty-number");
+let slider = document.getElementById('difficulty-slider');
+let output = document.getElementById('difficulty-number');
 output.innerHTML = slider.value;
 
 slider.oninput = function() {
     output.innerHTML = this.value;
+    // Set agent difficulty
 }
