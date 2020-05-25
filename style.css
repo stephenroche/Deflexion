@@ -12,12 +12,10 @@ body {
 
 canvas {
     background-color: #aaaaaa;
-    /*margin: 0;*/
 }
 
 .header {
 	background-color: #F0F0F0;
-	/*color: white;*/
 	text-align: center;
 	font-size: 50px;
 	position: fixed;
@@ -27,22 +25,17 @@ canvas {
 }
 
 .column {
-	/*position: sticky;*/
-	/*bottom: 0;*/
 	float: left;
 	margin-top: 60px;
 }
 
 .left {
 	position: fixed;
-	/*top: 60;*/
 	width: 60%;
-	/*background-color: #F0F0F0;*/
 }
 
 .right {
 	width: 40%;
-	/*background-color: yellow;*/
 	margin-left: 60%;
 	padding: 10px;
 }
@@ -50,6 +43,11 @@ canvas {
 #board-area {
 	/*display: none;*/
 	width: 100%;
+}
+
+.button-box {
+	display: flex;
+	font-size: 20px;
 }
 
 button {
@@ -63,24 +61,31 @@ button {
 
 button.end-turn {
 	width: 100%;
-	/*margin: 0;*/
-	/*cursor: pointer;*/
-	/*top: 0;*/
-	/*position: relative;*/
-	/*top: 500px;*/
-	/*height: 1000px;*/
 }
 
 button.undo-redo {
 	width: 15%;
 	margin-right: 10px;
 	/*cursor: pointer;*/
-	/*top: 0;*/
 }
 
 button:hover {
 	background-color: red;
 	color: white;
+}
+
+.difficulty-box {
+	/*width: 50%;*/
+	height: 40px;
+	border: 3px solid red;
+	background-color: white;
+	color: red;
+	flex: 1;
+	/*line-height: 34px;*/
+	/*text-align: center;*/
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .rule-box {
@@ -94,7 +99,6 @@ button:hover {
 
 img {
 	width: 25%;
-	float: left;
 }
 
 .rule-text {

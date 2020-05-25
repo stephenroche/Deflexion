@@ -17,9 +17,13 @@
 </div>
 
 <div class="column right">
-	<button class="undo-redo" onclick="gameArea.undo()">Undo</button>
-	<button class="undo-redo" onclick="gameArea.redo()">Redo</button>
-	<br>
+	<div class="button-box">
+		<button class="undo-redo" onclick="gameArea.undo()">Undo</button>
+		<button class="undo-redo" onclick="gameArea.redo()">Redo</button>
+		<div class="difficulty-box">
+			Difficulty <i> slider here</i>
+		</div>
+	</div>
 	<div class="rule-box">
 		<img src="Images/Win game.png">
 		<div class="rule-text">
@@ -62,15 +66,9 @@
 			Top left to bottom right: Pharaoh, Djed, Obelisk, Pyramid.
 		</div>
 	</div>
-	Deflexion is a board game I owned as a kid, designed by Luke Hooper, Michael Larson, and Del Segura. I made this website to practice building machine learning agents and learn JavaScript.
+	Deflexion is a board game I owned as a kid, designed by Luke Hooper, Michael Larson, and Del Segura in 2005. I made this website to practice building machine learning agents and learn JavaScript.
 </div>
 
-
-
-<!-- <div style="text-align:center;width:480px;">
-	<button onclick="gameArea.undo()">Undo</button>
-	<button onclick="gameArea.redo()">Redo</button>
-</div> -->
 
 <script src="util.js"></script>
 <script src="deflexion.js"></script>
