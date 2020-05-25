@@ -820,3 +820,11 @@ class Djed extends Piece {
     }
 }
 
+
+let slider = document.getElementById("difficulty-slider");
+let output = document.getElementById("difficulty-number");
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+    output.innerHTML = this.value;
+}
