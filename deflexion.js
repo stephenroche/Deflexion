@@ -55,7 +55,7 @@ var gameArea = {
         this.buttons = [new Button(this.canvas.width - 100, this.canvas.height - 25), new Button(100, 25)];
         this.boardState = new BoardState();
 
-        this.boardState.setStartState();
+        // this.boardState.setStartState();
         // this.boardState[1][7] = new Pharaoh(0);
         // this.boardState[8][5] = new Pharaoh(1);
         // // this.boardState[9][6] = new Pyramid(0, [-1, 1]);
@@ -64,13 +64,6 @@ var gameArea = {
         // console.log(this.boardState.getValidMoves());
         this.laserPath = [];
         this.opposition = new MCSTAgent();
-        this.boardHistory = [this.boardState.copy()];
-        this.turnDisplayed = 0;
-
-        // this.canvas.addEventListener('mouseover', (e) => {
-        //     this.pixelX = e.x - this.rect.left;
-        //     this.pixelY = e.y - this.rect.top;
-        // });
 
         this.canvas.addEventListener('mousedown', (e) => {
             for (let i = 0; i < this.buttons.length; i++) {
@@ -116,9 +109,13 @@ var gameArea = {
             delete this.pixelX;
             delete this.pixelY;
         });
+        this.newGame();
     },
-    stop : function() {
-        clearInterval(this.interval);
+    newGame : function() {
+        this.boardState.setStartState();
+        this.boardHistory = [this.boardState.copy()];
+        this.turnDisplayed = 0;
+        this.updateWinState();
     },    
     clear : function() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -289,7 +286,7 @@ var gameArea = {
             this.boardHistory = this.boardHistory.slice(0, this.turnDisplayed);
             this.boardHistory.push(this.boardState.copy());
             // console.log(this.boardHistory);
-            this.isWinState = this.boardState.isWinState();
+            this.updateWinState();
             if (this.boardState.turn == 1 && this.opposition && !this.isWinState) {
                 this.makeOppositionMove();
             }
@@ -342,7 +339,7 @@ var gameArea = {
             this.turnDisplayed--;
             this.boardState = this.boardHistory[this.turnDisplayed].copy();
             // console.log(this.boardHistory);
-            this.isWinState = false;
+            this.updateWinState();
         }
     },
     redo : function() {
@@ -350,7 +347,7 @@ var gameArea = {
             this.turnDisplayed++;
             this.boardState = this.boardHistory[this.turnDisplayed].copy();
             // console.log(this.boardHistory);
-            this.isWinState = this.boardState.isWinState();
+            this.updateWinState();
         }
     },
     drawGameOver : function() {
@@ -359,6 +356,16 @@ var gameArea = {
             this.ctx.font = "150px Arial";
             this.ctx.textAlign = "center";
             this.ctx.fillText(this.isWinState, 550, 500);
+        }
+    },
+    updateWinState: function() {
+        this.isWinState = this.boardState.isWinState();
+        if (this.isWinState) {
+            document.getElementById("end-turn").style.display = "none";
+            document.getElementById("replay").style.display = "block";
+        } else {
+            document.getElementById("end-turn").style.display = "block";
+            document.getElementById("replay").style.display = "none";
         }
     }
 }

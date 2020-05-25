@@ -13,7 +13,8 @@
 
 <div class="column left">
 	<canvas id="board-area"></canvas>
-	<button class="end-turn" onclick="gameArea.stopLaser()">End Turn Without Laser</button>
+	<button class="wide-button" id="end-turn" onclick="gameArea.stopLaser()">End Turn Without Laser</button>
+	<button class="wide-button" id="replay" style="display: none" onclick="gameArea.newGame()">REPLAY</button>
 </div>
 
 <div class="column right">
