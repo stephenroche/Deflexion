@@ -1,6 +1,13 @@
+* {
+	box-sizing: border-box;
+	border-radius: 5px;
+}
+
 body {
 	margin: 0;
 	background-color: #FFF000;
+	font-size: 18px;
+	font-family: Verdana;
 }
 
 canvas {
@@ -37,7 +44,7 @@ canvas {
 	width: 40%;
 	/*background-color: yellow;*/
 	margin-left: 60%;
-	/*padding: 10px;*/
+	padding: 10px;
 }
 
 #board-area {
@@ -45,17 +52,13 @@ canvas {
 	width: 100%;
 }
 
-.column-inner {
-	margin: 10px;
-}
-
 button {
 	height: 40px;
 	border: 3px solid red;
-	border-radius: 5px;
 	background-color: white;
 	color: red;
 	font-size: 20px;
+	font-family: inherit;
 }
 
 button.end-turn {
@@ -78,4 +81,22 @@ button.undo-redo {
 button:hover {
 	background-color: red;
 	color: white;
+}
+
+.rule-box {
+	width: 100%;
+	border: 3px solid black;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	margin: 10px 0;
+}
+
+img {
+	width: 25%;
+	float: left;
+}
+
+.rule-text {
+	margin-left: 10px;
 }
