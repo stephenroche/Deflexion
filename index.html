@@ -11,13 +11,64 @@
 	Deflexion <i>(work in progress)</i>
 </div>
 
-<canvas id="gameArea"></canvas>
-
-<div style="text-align:center;width:480px;">
-	<button onclick="gameArea.stopLaser()">End Turn Without Laser</button>
-	<button onclick="gameArea.undo()">Undo</button>
-	<button onclick="gameArea.redo()">Redo</button>
+<div class="column left">
+	<canvas id="board-area"></canvas>
+	<button class="end-turn" onclick="gameArea.stopLaser()">End Turn Without Laser</button>
 </div>
+
+<div class="column right">
+	<div class="button-box">
+		<button class="undo-redo" onclick="gameArea.undo()">Undo</button>
+		<button class="undo-redo" onclick="gameArea.redo()">Redo</button>
+		<div class="difficulty-box">
+			Difficulty <i>slider here</i>
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Win game.png">
+		<div class="rule-text">
+			Win the game by hitting the opponent's Pharaoh from any side with a laser. Use your mirrored pieces to control the path of the lasers.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Press laser.png">
+		<div class="rule-text">
+			Each move consists of moving or turning a piece, followed by optionally firing either laser by holding the red buttons. You can test the laser path by pressing the button before making your move.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Move silver column.png">
+		<div class="rule-text">
+			Move a piece by dragging it one space in any direction. Gold pieces are not allowed to move onto the silver column, and vice versa.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Turn piece.png">
+		<div class="rule-text">
+			Turn a piece 90&#176; in either direction by dragging the swivel wheel. A piece cannot turn 180&#176; in a single turn.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Move Djed.png">
+		<div class="rule-text">
+			Djeds (the double-sided mirrors) can move to a space occupied by a Pyramid or Obelisk of either team, swapping positions with that piece.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Take piece.png">
+		<div class="rule-text">
+			Take a piece (Pyramid or Obelisk) by hitting it on a non-mirrored side with a laser. Djeds only have mirrored sides and therefore can't be taken.
+		</div>
+	</div>
+	<div class="rule-box">
+		<img src="Images/Piece reference.png">
+		<div class="rule-text">
+			Top left to bottom right: Pharaoh, Djed, Obelisk, Pyramid.
+		</div>
+	</div>
+	Deflexion is a board game I owned as a kid, designed by Luke Hooper, Michael Larson, and Del Segura in 2005. I made this website to practice building machine learning agents and learn JavaScript.
+</div>
+
 
 <script src="util.js"></script>
 <script src="deflexion.js"></script>

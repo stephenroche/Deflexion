@@ -13,7 +13,7 @@ function startGame() {
 }
 
 var gameArea = {
-    canvas : document.getElementById('gameArea'),
+    canvas : document.getElementById('board-area'),
     get hoverSquare() {
         if (!this.grabbedPiece) {
             return null;
@@ -62,21 +62,19 @@ var gameArea = {
         // this.boardState[9][5] = new Pyramid(0, [-1, 1]);
 
         // console.log(this.boardState.getValidMoves());
-        this.rect = this.canvas.getBoundingClientRect();
         this.laserPath = [];
         this.opposition = new MCSTAgent();
         this.boardHistory = [this.boardState.copy()];
         this.turnDisplayed = 0;
 
-        this.canvas.addEventListener('mouseover', (e) => {
-            this.pixelX = e.x - this.rect.left;
-            this.pixelY = e.y - this.rect.top;
-        });
+        // this.canvas.addEventListener('mouseover', (e) => {
+        //     this.pixelX = e.x - this.rect.left;
+        //     this.pixelY = e.y - this.rect.top;
+        // });
 
         this.canvas.addEventListener('mousedown', (e) => {
             for (let i = 0; i < this.buttons.length; i++) {
-                if (this.buttons[i].isClicked(this.pixelX, this.pixelY)) {
-                    this.buttons[i].isPressed = true;
+                if (this.buttons[i].isHover(this.pixelX, this.pixelY)) {
                     this.fireLaser(i);
                     return;
                 }
@@ -102,13 +100,11 @@ var gameArea = {
             }
         });
         this.canvas.addEventListener('mousemove', (e) => {
-            this.pixelX = e.x - this.rect.left;
-            this.pixelY = e.y - this.rect.top;
+            let rect = this.canvas.getBoundingClientRect();
+            this.pixelX = e.offsetX * 100 * (WIDTH + 1) / rect.width;
+            this.pixelY = e.offsetY * 100 * (HEIGHT + 1) / rect.height;
         });
         this.canvas.addEventListener('mouseup', (e) => {
-            for (var button of this.buttons) {
-                button.isPressed = false;
-            }
             if (this.laserInterval) {
                 this.stopLaser();
             }
@@ -372,12 +368,11 @@ function Button(x, y) {
     this.x = x;
     this.y = y;
     this.radius = 20;
-    this.isPressed = false;
     this.draw = function() {
         var ctx = gameArea.ctx;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        if (this.isPressed) {
+        if (this.isHover(gameArea.pixelX, gameArea.pixelY)) {
             ctx.fillStyle = '#F06060';
         } else {
             ctx.fillStyle = '#F00000';
@@ -389,7 +384,7 @@ function Button(x, y) {
         ctx.lineWidth = 4;
         ctx.stroke();
     }
-    this.isClicked = function(pixelX, pixelY) {
+    this.isHover = function(pixelX, pixelY) {
         var distance = Math.sqrt((pixelX - this.x)**2 + (pixelY - this.y)**2);
         return (distance <= this.radius);
     }

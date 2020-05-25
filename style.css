@@ -1,5 +1,13 @@
+* {
+	box-sizing: border-box;
+	border-radius: 5px;
+}
+
 body {
 	margin: 0;
+	background-color: #FFF000;
+	font-size: 18px;
+	font-family: Verdana;
 }
 
 canvas {
@@ -7,9 +15,93 @@ canvas {
 }
 
 .header {
-	background-color: lightblue;
-	/*margin: 0px;*/
-	/*overflow: hidden;*/
+	background-color: #F0F0F0;
 	text-align: center;
-	font-size: 60px;
+	font-size: 50px;
+	position: fixed;
+	top: 0;
+	width: 100%;
+	height: 60px;
+}
+
+.column {
+	float: left;
+	margin-top: 60px;
+}
+
+.left {
+	position: fixed;
+	width: 60%;
+	/*width: 854px;*/
+}
+
+.right {
+	width: 40%;
+	margin-left: 60%;
+	padding: 10px;
+}
+
+#board-area {
+	/*display: none;*/
+	width: 100%;
+}
+
+.button-box {
+	display: flex;
+	font-size: 20px;
+}
+
+button {
+	height: 40px;
+	border: 3px solid red;
+	background-color: white;
+	color: red;
+	font-size: 20px;
+	font-family: inherit;
+}
+
+button.end-turn {
+	width: 100%;
+}
+
+button.undo-redo {
+	width: 15%;
+	margin-right: 10px;
+	/*cursor: pointer;*/
+}
+
+button:hover {
+	background-color: red;
+	color: white;
+}
+
+.difficulty-box {
+	/*width: 50%;*/
+	height: 40px;
+	border: 3px solid red;
+	background-color: white;
+	color: red;
+	flex: 1;
+	/*line-height: 34px;*/
+	/*text-align: center;*/
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.rule-box {
+	width: 100%;
+	border: 3px solid black;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	margin: 10px 0;
+}
+
+img {
+	width: 25%;
+}
+
+.rule-text {
+	margin-left: 10px;
 }
