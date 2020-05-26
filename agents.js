@@ -122,8 +122,27 @@ class MCSTAgent {
 			finishedSimulations += 1;
 		}
 
-		if (certainty === null) {
+
+		if (this.difficulty !== null) {
+			// Add noise to averageValue scores, then sort and sample based on order
+			let mapped = [];
+			root.children.forEach(function (child, index) {
+				if (child.timesVisited > 0) {
+					mapped.push( {index: index, value: child.averageValue + Math.random() * 0} );
+				}
+			});
+	        mapped.sort((a, b) => (a.value - b.value));
+			let sortedChildren = mapped.map(el => root.children[el.index]);
+			if (team == 0) {
+        		sortedChildren.reverse();
+        	}
+
+			let mistakeProb = 0.8 * (8 - this.difficulty) / 7;
+			var chosenNode = sample(sortedChildren, mistakeProb);
+
+		} else if (certainty === null) {
 			var chosenNode = root.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b)
+
 		} else {
 			let teamToggle = (team == 0 ? 1 : -1);
 			let probs = new Counter();
@@ -187,4 +206,16 @@ class MCSTAgent {
 
 		return chosenNode.action;
 	}
+}
+
+
+function sample(array, mistakeProb) {
+	let i = 0;
+    while (true) {
+    	if (Math.random() >= mistakeProb) {
+    		return array[i];
+    	} else {
+    		i = (i + 1) % array.length;
+    	}
+    }
 }
