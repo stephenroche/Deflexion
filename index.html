@@ -8,7 +8,7 @@
 <body onload="startGame()">
 
 <div class="header">
-	Deflexion <i>(work in progress)</i>
+	Deflexion
 </div>
 
 <div class="column left">
@@ -23,9 +23,12 @@
 		<button class="undo-redo" onclick="gameArea.redo()">Redo</button>
 		<div class="difficulty-box">
 			Difficulty
-			<input type="range" min="1" max="10" value="8" class="slider" id="difficulty-slider">
+			<input type="range" min="1" max="10" value="7" class="slider" id="difficulty-slider">
 			<span id="difficulty-number"></span>
 		</div>
+	</div>
+	<div id=time-warning style="display: none">
+		Warning: Agent with difficulty 9 or higher may take several seconds to think.
 	</div>
 	<div class="rule-box">
 		<img src="Images/Win game.png">

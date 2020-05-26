@@ -64,6 +64,7 @@ var gameArea = {
         // console.log(this.boardState.getValidMoves());
         this.laserPath = [];
         this.opposition = new MCSTAgent();
+        this.opposition.difficulty = slider.value;
 
         this.canvas.addEventListener('mousedown', (e) => {
             for (let i = 0; i < this.buttons.length; i++) {
@@ -848,5 +849,10 @@ output.innerHTML = slider.value;
 
 slider.oninput = function() {
     output.innerHTML = this.value;
-    // Set agent difficulty
+    gameArea.opposition.difficulty = this.value;
+    if (this.value >= 9) {
+        document.getElementById('time-warning').style.display = 'block';
+    } else {
+        document.getElementById('time-warning').style.display = 'none';
+    }
 }

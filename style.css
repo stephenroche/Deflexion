@@ -11,7 +11,7 @@ body {
 }
 
 canvas {
-    background-color: #aaaaaa;
+    background-color: #A0A0A0;
 }
 
 .header {
@@ -34,6 +34,7 @@ canvas {
 	position: fixed;
 	width: 60%;
 	/*width: 854px;*/
+	padding-left: 10px;
 }
 
 .right {
@@ -89,6 +90,17 @@ button:hover {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+}
+
+#time-warning {
+	width: 100%;
+	border: 3px solid red;
+	background-color: white;
+	color: red;
+	padding: 10px;
+	font-size: 20px;
+	/*align-items: center;*/
+	margin: 10px 0;
 }
 
 .rule-box {

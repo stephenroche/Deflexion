@@ -27,10 +27,11 @@ savedWeights['Enemies blocking Pharaoh'] = -0.065223;
 
 
 class MCSTAgent {
-	constructor(featExtractor=new DeflexionExtractor(), discount=1, alpha=0.01, loadWeights=true) {
+	constructor(featExtractor=new DeflexionExtractor(), difficulty=null, discount=1, alpha=0.01, loadWeights=true) {
 		this.featExtractor = featExtractor;
 		this.discount = discount;
 		this.alpha = alpha;
+		this.difficulty = difficulty;
 		if (loadWeights) {
 			this.weights = savedWeights;
 		} else {
@@ -62,6 +63,9 @@ class MCSTAgent {
 		let simulations = 0;
 		let finishedSimulations = 0;
 		let duplicates = 0;
+		if (this.difficulty !== null) {
+			maxSimulations = 100 * (40000 / 100) ** ((this.difficulty - 1) / (10 - 1));
+		}
 		// while time.time() - startTime < 10:
 		while (simulations < maxSimulations) {
 			simulations += 1;
@@ -172,7 +176,7 @@ class MCSTAgent {
 		}
 		if (chosenNode.children.length > 0) {
 			let wg = chosenNode.children.reduce((a, b) => (a.timesVisited > b.timesVisited) ? a : b);
-			console.log('worse grandchild under chosen (' + chosenNode.timesVisited + ' visits):');
+			console.log('worst grandchild under chosen (' + chosenNode.timesVisited + ' visits):');
 			console.log('  timesVisited = ' + wg.timesVisited);
 			console.log('  action = ' + wg.action);
 			console.log('  value = ' + wg.averageValue);
