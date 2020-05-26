@@ -126,9 +126,12 @@ class MCSTAgent {
 		if (this.difficulty !== null) {
 			// Add noise to averageValue scores, then sort and sample based on order
 			let mapped = [];
+			let noise = 0.2 * (0.005 / 0.2) ** ((this.difficulty - 1) / (10 - 1));
 			root.children.forEach(function (child, index) {
 				if (child.timesVisited > 0) {
-					mapped.push( {index: index, value: child.averageValue + Math.random() * 0} );
+					mapped.push( {index: index, value: child.averageValue + Math.random() * noise} );
+				} else {
+					mapped.push( {index: index, value: Math.random() * noise} );
 				}
 			});
 	        mapped.sort((a, b) => (a.value - b.value));
