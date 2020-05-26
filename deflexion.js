@@ -850,7 +850,7 @@ output.innerHTML = slider.value;
 slider.oninput = function() {
     output.innerHTML = this.value;
     gameArea.opposition.difficulty = this.value;
-    if (this.value >= 9) {
+    if (this.value >= 8) {
         document.getElementById('time-warning').style.display = 'block';
     } else {
         document.getElementById('time-warning').style.display = 'none';

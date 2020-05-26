@@ -64,7 +64,7 @@ class MCSTAgent {
 		let finishedSimulations = 0;
 		let duplicates = 0;
 		if (this.difficulty !== null) {
-			maxSimulations = 100 * (40000 / 100) ** ((this.difficulty - 1) / (10 - 1));
+			maxSimulations = 200 * (40000 / 200) ** ((this.difficulty - 1) / (10 - 1));
 		}
 		// while time.time() - startTime < 10:
 		while (simulations < maxSimulations) {
